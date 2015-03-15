@@ -75,18 +75,59 @@ public class CourseAttendanceEntry {
         this.grade = grade;
     }
     
+    public Student getStudent() {
+        return student;
+    }
+    
+    public Course getCourse() {
+        return course;
+    }
+    
+    public int getYear() {
+        return year;
+    }
+    
+    public int getMonth() {
+        return month;
+    }
+    
+    public int getGrade() {
+        return grade;
+    }
+    
+    @Override
+    public boolean equals(final Object obj) {
+        if (!(obj instanceof CourseAttendanceEntry)) {
+            return false;
+        }
+        
+        final CourseAttendanceEntry other = (CourseAttendanceEntry) obj;
+        return getStudent().equals(other.getStudent()) 
+                && getCourse().equals(other.getCourse())
+                && getYear() == other.getYear()
+                && getMonth() == other.getMonth();
+    }
+    
+    @Override
+    public int hashCode() {
+        return getStudent().hashCode() +
+               getCourse().hashCode() +
+               getYear() +
+               getMonth();
+    }
+    
     public static StudentSelector createAttendanceEntry() {
         return new StudentSelector();
     }
     
-    private static final class StudentSelector {
+    public static final class StudentSelector {
         
         public CourseSelector withStudent(final Student student) {
             return new CourseSelector(student);
         }
     }
     
-    private static final class CourseSelector {
+    public static final class CourseSelector {
         
         private final Student student;
         
@@ -99,7 +140,7 @@ public class CourseAttendanceEntry {
         }
     }
     
-    private static final class YearSelector {
+    public static final class YearSelector {
         
         private final Student student;
         private final Course course;
@@ -115,7 +156,7 @@ public class CourseAttendanceEntry {
         }
     }
     
-    private static final class MonthSelector {
+    public static final class MonthSelector {
         
         private final Student student;
         private final Course course;
@@ -134,7 +175,7 @@ public class CourseAttendanceEntry {
         }
     }
     
-    private static final class GradeSelector {
+    public static final class GradeSelector {
         
         private final Student student;
         private final Course course;

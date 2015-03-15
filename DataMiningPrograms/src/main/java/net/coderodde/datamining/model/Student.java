@@ -50,14 +50,14 @@ public class Student {
         return id;
     }
     
-    private static final class IdSelector {
+    public static final class IdSelector {
         
         public static RegistrationYearSelector withId(final int id) {
             return new RegistrationYearSelector(id);
         }
     }
     
-    private static final class RegistrationYearSelector {
+    public static final class RegistrationYearSelector {
         
         private final int id;
         

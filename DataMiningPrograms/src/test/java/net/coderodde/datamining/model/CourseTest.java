@@ -3,7 +3,6 @@ package net.coderodde.datamining.model;
 import static net.coderodde.datamining.model.Course.createCourse;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import org.junit.BeforeClass;
 
 public class CourseTest {
     
@@ -21,8 +20,8 @@ public class CourseTest {
     private static final float COURSE_CREDITS1 = 3.0f;
     private static final float COURSE_CREDITS2 = 4.5f;
     
-    private Course course1;
-    private Course course2;
+    private final Course course1;
+    private final Course course2;
     
     public CourseTest() {
         course1 = createCourse()
@@ -88,5 +87,59 @@ public class CourseTest {
         assertTrue(course1.hashCode() == copy.hashCode());
         assertEquals(course1.hashCode(), course1.hashCode());
         assertEquals(course2.hashCode(), course2.hashCode());
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testThrowsOnNullName() {
+        createCourse()
+                .withName(null)
+                .withCode(COURSE_CODE1)
+                .withNormalScale()
+                .withCredits(2.0f);
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testThrowsOnNullCode() {
+        createCourse()
+                .withName(COURSE_NAME1)
+                .withCode(null)
+                .withBinaryScale()
+                .withCredits(3.0f);
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testThrowsOnNaNCredits() {
+        createCourse()
+                .withName(COURSE_NAME1)
+                .withCode(COURSE_CODE1)
+                .withBinaryScale()
+                .withCredits(Float.NaN);
+    }
+    
+    @Test(expected = IllegalArgumentException.class) 
+    public void testThrowsOnNegativeInfiniteCredits() {
+        createCourse() 
+                .withName(COURSE_NAME1)
+                .withCode(COURSE_CODE1)
+                .withNormalScale()
+                .withCredits(Float.NEGATIVE_INFINITY);
+    }
+    
+    @Test(expected = IllegalArgumentException.class) 
+    public void testThrowsOnPositiveInfiniteCredits() {
+        createCourse() 
+                .withName(COURSE_NAME1)
+                .withCode(COURSE_CODE1)
+                .withNormalScale()
+                .withCredits(Float.NEGATIVE_INFINITY);
+    }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testThrowsOnNegativeCredits() {
+        createCourse()
+                .withName(COURSE_NAME1)
+                .withCode(COURSE_CODE1)
+                .withBinaryScale()
+                .withCredits(-0.01f);
     }
 }
