@@ -2,6 +2,7 @@ package net.coderodde.datamining;
 
 import java.io.File;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import net.coderodde.datamining.loader.support.DataLoaderv1;
@@ -44,6 +45,8 @@ public class App {
         app.printAmountOfAdvancedProgrammingStudentsThatPassed();
         app.printAmountOfDatasturcuteStudentsThatPassedWith45();
         app.printAmountOfStudentsThatPassedBasicProgrammingCourses();
+        app.printAmountOfStudentsWithThreeCourses();
+        app.printAmountOfStudentsWithThreeCoursesWithCoolGrades();
     }
 
     private void printAllCourseCodes() {
@@ -165,7 +168,128 @@ public class App {
         
         set.removeAll(toRemove);
         
-        System.out.println("Amount of students that have passed both basic " + 
-                           "and advanced programming courses: " + set.size());
+        System.out.println("The amount of students that have passed both " +
+                           "basic and advanced programming courses: " + 
+                           set.size());
+    }
+    
+    /**
+     * Prints the amount of students that have passed "Introduction to
+     * Programming", "Advanced Programming" and "Data structures".
+     */
+    private void printAmountOfStudentsWithThreeCourses() {
+        final Course course1 = 
+                appData.getCourseByName("Ohjelmoinnin perusteet");
+        
+        final Course course2a = 
+                appData.getCourseByName("Ohjelmoinnin jatkokurssi");
+        
+        final Course course2b = 
+                appData.getCourseByName("Java-ohjelmointi");
+        
+        final Course course3 = 
+                appData.getCourseByName("Tietorakenteet ja algoritmit");
+        
+        final List<Student> studentList1 = 
+                appData.queryStudents(course1, 1, 5);
+        
+        final List<Student> studentList2a = 
+                appData.queryStudents(course2a, 1, 5);
+        
+        final List<Student> studentList2b = 
+                appData.queryStudents(course2b, 1, 5);
+        
+        final List<Student> studentList3 = 
+                appData.queryStudents(course3, 1, 5);
+        
+        final Set<Student> studentSet1 = new HashSet<>(studentList1.size());
+        
+        final Set<Student> studentSet2 = new HashSet<>(studentList2a.size() +
+                                                       studentList2b.size());
+        
+        final Set<Student> studentSet3 = new HashSet<>(studentList3.size());
+        
+        studentSet1.addAll(studentList1);
+        studentSet2.addAll(studentList2a);
+        studentSet2.addAll(studentList2b);
+        studentSet3.addAll(studentList3);
+        
+        final Set<Student> finalSet = new HashSet<>();
+        finalSet.addAll(studentSet2);
+        
+        final Iterator<Student> it = finalSet.iterator();
+        
+        while (it.hasNext()) {
+            final Student s = it.next();
+            
+            if (!studentSet1.contains(s) || !studentSet3.contains(s)) {
+                it.remove();
+            }
+        }
+        
+        System.out.println("The amount of students that passed both " +
+                           "programming courses and the \"Data structures\": " + 
+                           finalSet.size());
+    }
+    
+    /**
+     * Prints the amount of students that have passed "Introduction to
+     * Programming", "Advanced Programming" and "Data structures", all with
+     * cool grades of 4 or 5.
+     */
+    private void printAmountOfStudentsWithThreeCoursesWithCoolGrades() {
+        final Course course1 = 
+                appData.getCourseByName("Ohjelmoinnin perusteet");
+        
+        final Course course2a = 
+                appData.getCourseByName("Ohjelmoinnin jatkokurssi");
+        
+        final Course course2b = 
+                appData.getCourseByName("Java-ohjelmointi");
+        
+        final Course course3 = 
+                appData.getCourseByName("Tietorakenteet ja algoritmit");
+        
+        final List<Student> studentList1 = 
+                appData.queryStudents(course1, 4, 5);
+        
+        final List<Student> studentList2a = 
+                appData.queryStudents(course2a, 4, 5);
+        
+        final List<Student> studentList2b = 
+                appData.queryStudents(course2b, 4, 5);
+        
+        final List<Student> studentList3 = 
+                appData.queryStudents(course3, 4, 5);
+        
+        final Set<Student> studentSet1 = new HashSet<>(studentList1.size());
+        
+        final Set<Student> studentSet2 = new HashSet<>(studentList2a.size() +
+                                                       studentList2b.size());
+        
+        final Set<Student> studentSet3 = new HashSet<>(studentList3.size());
+        
+        studentSet1.addAll(studentList1);
+        studentSet2.addAll(studentList2a);
+        studentSet2.addAll(studentList2b);
+        studentSet3.addAll(studentList3);
+        
+        final Set<Student> finalSet = new HashSet<>();
+        finalSet.addAll(studentSet2);
+        
+        final Iterator<Student> it = finalSet.iterator();
+        
+        while (it.hasNext()) {
+            final Student s = it.next();
+            
+            if (!studentSet1.contains(s) || !studentSet3.contains(s)) {
+                it.remove();
+            }
+        }
+        
+        System.out.println("The amount of students that passed both " + 
+                           "programming courses and the \"Data structures\" " +
+                           "with grades 4 or 5: " + 
+                           finalSet.size());
     }
 }
