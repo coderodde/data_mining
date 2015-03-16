@@ -38,6 +38,56 @@ public class DataLoaderv1 extends DataLoader {
     private static final String COURSE_PASSED_TOKEN = "Hyv.";
     
     /**
+     * The string denoting that a student was not attending the course exam.
+     */
+    private static final String NOT_IN_EXAM = "Eisa";
+    
+    /**
+     * The string denoting that a student has abandoned the course.
+     */
+    private static final String ABANDONED = "Luop";
+    
+    /**
+     * Laudatur grade.
+     */
+    private static final String LAUDATUR = "L";
+    
+    /**
+     * Eximia grade.
+     */
+    private static final String EXIMIA = "ECLA";
+    
+    /**
+     * Magna Cum Laude Approbatur grade.
+     */
+    private static final String MAGNA = "MCLA";
+    
+    /**
+     * Cum Laude Approbatur grade.
+     */
+    private static final String CUM_LAUDE = "CL";
+    
+    /**
+     * Non Sine Laude Approbatur grade.
+     */
+    private static final String NSLA = "NSLA";
+    
+    /**
+     * Lubenter grade.
+     */
+    private static final String LUBENTER = "LUB";
+    
+    /**
+     * The grade denoting satisfactory knowledge. Mapped to binary grading.
+     */
+    private static final String GRADE_SATISFACTORY = "TT";
+    
+    /**
+     * The grade denoting good knowledge. Mapped to binary grading.
+     */
+    private static final String GRADE_GOOD = "HT";
+    
+    /**
      * Denotes the amount of tokens per course attendance entry.
      */
     private static final int TOKENS_PER_ENTRY = 5;
@@ -88,30 +138,33 @@ public class DataLoaderv1 extends DataLoader {
         studentList = new ArrayList<>();
         entryList = new ArrayList<>();
         courses = new HashMap<>();
-        studentId = 1;
+        studentId = 0;
         
         while (scanner.hasNext()) {
             parseLine(scanner.nextLine());
         }
         
         courseList.addAll(courses.keySet());
+        
+        System.out.println("Students: " + studentList.size());
+        System.out.println("Courses: " + courses.size());
+        System.out.println("Entries: " + entryList.size());
+        
+        for (final Course course : courses.keySet()) {
+            System.out.println(course);
+        }
+        
         return new AppDataStorage(studentList, courseList, entryList);
     }
     
     private void parseLine(final String line) {
         final String[] parts = handleCourseNames(line.split(" "));
-        System.out.println("Begin");
-        
-        for (String p : parts) {
-            System.out.println(p);
-        }
-        
-        System.out.println("Line: " + line);
         final Student student = 
                 createStudent()
                         .withId(++studentId)
                         .withRegistrationYear(Integer.parseInt(parts[0]));
         
+        System.out.println("Line: " + studentId);
         studentList.add(student);
         
         final int totalCourses = (parts.length - 1) / TOKENS_PER_ENTRY;
@@ -134,7 +187,8 @@ public class DataLoaderv1 extends DataLoader {
         final int month = Integer.parseInt(monthString);
         
         final String courseCode = parts[startIndex + 1];
-        final String courseNameRaw = parts[startIndex + 2];
+        final String courseNameRaw = parts[startIndex + 2].trim();
+        
         final String courseName = 
                 courseNameRaw.substring(1, courseNameRaw.length() - 1);
         
@@ -169,10 +223,20 @@ public class DataLoaderv1 extends DataLoader {
         
         switch (grade) {
             case COURSE_FAILED_TOKEN:
+            case NOT_IN_EXAM:
+            case ABANDONED:
                 gradeInt = 0;
                 break;
                 
             case COURSE_PASSED_TOKEN:
+            case GRADE_SATISFACTORY:
+            case GRADE_GOOD:
+            case LAUDATUR:
+            case EXIMIA:
+            case MAGNA:
+            case CUM_LAUDE:
+            case NSLA:
+            case LUBENTER:
                 gradeInt = 1;
                 break;
                 
@@ -204,8 +268,26 @@ public class DataLoaderv1 extends DataLoader {
         for (int i = 0; i < parts.length; ++i) {
             partList.add(parts[i]);
             
-            if (parts[i].startsWith("\"")) {
-                if (!parts[i].endsWith("\"")) {
+            // An ad-hoc stuff in order to parse shit as
+            // ""Am I funky enought?" - self-reflection course"
+            if (parts[i].startsWith("\"\"")) {
+                int quotesLeft = 2;
+                
+                for (;;) {
+                    ++i;
+                    
+                    partList.set(partList.size() - 1,
+                                 partList.get(partList.size() - 1) +
+                                 " " + parts[i]);
+                    
+                    if (parts[i].endsWith("\"")) {
+                        if (--quotesLeft == 0) {
+                            break;
+                        }
+                    }
+                }
+            } else if (parts[i].startsWith("\"")) {
+                if (parts[i].length() == 1 || !parts[i].endsWith("\"")) {
                     // Load the parts until one ends with a quote.
                     do {
                         ++i;

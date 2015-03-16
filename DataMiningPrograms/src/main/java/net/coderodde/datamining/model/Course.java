@@ -112,6 +112,14 @@ public class Course {
         return getCode().hashCode();
     }
     
+    @Override
+    public String toString() {
+        return "[" + name + ", " + code + ", " + 
+                (gradingMode == GRADING_MODE_PASS_FAIL ? 
+                 "binary scale, " : "normal scale, ") +
+                credits + " credits]";
+    }
+    
     public static final class NameSelector {
         
         public CodeSelector withName(final String name) {
