@@ -120,7 +120,6 @@ public class DataLoaderv1 extends DataLoader {
     @Override
     public AppDataStorage load(File file) {
         checkFile(file);
-        System.out.println("Current dir: " + System.getProperty("user.dir"));
         Scanner scanner = null;
         
         try {
@@ -145,15 +144,6 @@ public class DataLoaderv1 extends DataLoader {
         }
         
         courseList.addAll(courses.keySet());
-        
-        System.out.println("Students: " + studentList.size());
-        System.out.println("Courses: " + courses.size());
-        System.out.println("Entries: " + entryList.size());
-        
-        for (final Course course : courses.keySet()) {
-            System.out.println(course);
-        }
-        
         return new AppDataStorage(studentList, courseList, entryList);
     }
     
@@ -164,7 +154,6 @@ public class DataLoaderv1 extends DataLoader {
                         .withId(++studentId)
                         .withRegistrationYear(Integer.parseInt(parts[0]));
         
-        System.out.println("Line: " + studentId);
         studentList.add(student);
         
         final int totalCourses = (parts.length - 1) / TOKENS_PER_ENTRY;
