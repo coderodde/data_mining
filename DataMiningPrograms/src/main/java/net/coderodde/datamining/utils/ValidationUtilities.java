@@ -1,5 +1,7 @@
 package net.coderodde.datamining.utils;
 
+import java.io.File;
+
 /**
  * This class contains static methods for validation.
  * 
@@ -104,6 +106,32 @@ public class ValidationUtilities {
                                           final String errorMessage) {
         if (obj == null) {
             throw new IllegalArgumentException(errorMessage);
+        }
+    }
+    
+    /**
+     * Checks that the input file exists.
+     * 
+     * @param file the file to check.
+     * @throws IllegalArgumentException if file does not exist.
+     */
+    public static final void checkFileExists(final File file) {
+        if (!file.exists()) {
+            throw new IllegalArgumentException(
+            "File \"" + file.getAbsolutePath() + "\" does not exist.");
+        }
+    }
+    
+    /**
+     * Checks that the input file is regular (it is not, say, a directory).
+     * 
+     * @param file the file to check.
+     * @throws IllegalArgumentException if file is not regular.
+     */
+    public static final void checkFileIsRegular(final File file) {
+        if (!file.isFile()) {
+            throw new IllegalArgumentException(
+            "File \"" + file.getAbsolutePath() + "\" is not regular.");
         }
     }
 }
