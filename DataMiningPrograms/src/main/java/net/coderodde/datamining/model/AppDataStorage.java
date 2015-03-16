@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import static net.coderodde.datamining.model.Course.COURSE_FAILED_GRADE;
 
 /**
  * This singleton class is responsible for organizing all the data such, that 
@@ -35,6 +36,13 @@ public class AppDataStorage {
     private final Map<String, Course> mapNameToCourse;
     
     /**
+     * The structure mapping <tt>(student, course)</tt> tuple to the list of
+     * course attendances.
+     */
+    private final Map<Student, Map<Course, List<CourseAttendanceEntry>>> 
+            matrix;
+    
+    /**
      * The list containing all the courses.
      */
     private final List<Course> courseList;
@@ -54,6 +62,7 @@ public class AppDataStorage {
         this.courseMap = new HashMap<>(courseList.size());
         this.courseList = Collections.<Course>unmodifiableList(courseList);
         this.mapNameToCourse = new HashMap<>(courseList.size());
+        this.matrix = new HashMap<>(studentList.size());
         
         for (final CourseAttendanceEntry entry : entryList) {
             final Student student = entry.getStudent();
@@ -75,6 +84,29 @@ public class AppDataStorage {
         for (final Course course : courseMap.keySet()) {
             mapNameToCourse.put(course.getName(), course);
         }
+        
+        for (final Student student : studentList) {
+            final Map<Course, List<CourseAttendanceEntry>> map 
+                    = new HashMap<>();
+            
+            matrix.put(student, map);
+            
+            final List<CourseAttendanceEntry> entryListA = 
+                    studentMap.get(student);
+            
+            for (final CourseAttendanceEntry entry : entryListA) {
+                final Course course = entry.getCourse();
+                
+                if (map.containsKey(course)) {
+                    map.get(course).add(entry);
+                } else {
+                    final List<CourseAttendanceEntry> entryListB = 
+                            new ArrayList<>();
+                    entryListB.add(entry);
+                    map.put(course, entryListB);
+                }
+            }
+        }
     }
     
     /**
@@ -95,6 +127,20 @@ public class AppDataStorage {
      */
     public Course getCourseByName(final String courseName) {
         return mapNameToCourse.get(courseName);
+    }
+    
+    /**
+     * Returns a list of all attendances a student <code>student</code> had on
+     * behalf the course <code>course</code>.
+     * 
+     * @param student the target student.
+     * @param course  the target course.
+     * @return        the list of attendance entries.
+     */
+    public List<CourseAttendanceEntry> getEntryList(final Student student,
+                                                    final Course course) {
+        return Collections.<CourseAttendanceEntry>
+                unmodifiableList(matrix.get(student).get(course));
     }
     
     /**
@@ -127,6 +173,99 @@ public class AppDataStorage {
         
         final List<Student> ret = new ArrayList<>(studentSet.size());
         ret.addAll(studentSet);
+        return ret;
+    }
+    
+    public boolean passed(final Student student, final Course course) {
+        final List<CourseAttendanceEntry> entryList = 
+                matrix.get(student).get(course);
+        
+        if (entryList == null || entryList.isEmpty()) {
+            return false;
+        }
+        
+        for (final CourseAttendanceEntry entry : entryList) {
+            if (entry.getGrade() != COURSE_FAILED_GRADE) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Returns the grade of student <code>student</code> for the course
+     * <code>course</code>. If the student attempted the course more than once,
+     * the best grade is returned.
+     * 
+     * @param student the target student.
+     * @param course  the target course.
+     * @return the best grade of the student for the course.
+     */
+    public int grade(final Student student, final Course course) {
+        final List<CourseAttendanceEntry> entryList = 
+                matrix.get(student).get(course);
+                
+        if (entryList == null || entryList.isEmpty()) {
+            return Course.NON_EXISTENT_GRADE;
+        }
+        
+        int best = Course.NON_EXISTENT_GRADE;
+        
+        for (final CourseAttendanceEntry entry : entryList) {
+            if (best < entry.getGrade()) {
+                best = entry.getGrade();
+            }
+        }
+        
+        return best;
+    }
+    
+    public boolean hasGrade(final Student student, 
+                            final Course course,
+                            final int minGrade,
+                            final int maxGrade) {
+        final int localMinGrade = Math.min(minGrade, maxGrade);
+        final int localMaxGrade = Math.max(minGrade, maxGrade);
+        
+        final List<CourseAttendanceEntry> entryList = 
+                matrix.get(student).get(course);
+        
+        if (entryList == null || entryList.isEmpty()) {
+            return localMinGrade >= Course.NON_EXISTENT_GRADE;
+        }
+        
+        for (final CourseAttendanceEntry entry : entryList) {
+            final int grade = entry.getGrade();
+            
+            if (grade >= localMinGrade && grade <= localMaxGrade) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    public List<Student> queryStudents(final Course course, 
+                                       int minGrade,
+                                       int maxGrade) {
+        if (minGrade > maxGrade) {
+            int tmp = minGrade;
+            minGrade = maxGrade;
+            maxGrade = tmp;
+        }
+        
+        final List<Student> studentList = 
+                getStudentsByCourseName(course.getName());
+        
+        final List<Student> ret = new ArrayList<>(studentList.size());
+        
+        for (final Student student : studentList) {
+            if (hasGrade(student, course, minGrade, maxGrade)) {
+                ret.add(student);
+            }
+        }
+        
         return ret;
     }
     

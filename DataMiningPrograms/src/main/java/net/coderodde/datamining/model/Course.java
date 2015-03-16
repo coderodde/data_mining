@@ -14,6 +14,11 @@ import static net.coderodde.datamining.utils.ValidationUtilities.checkNotNull;
 public class Course {
     
     /**
+     * The value representing that the target grade does not exist.
+     */
+    public static final int NON_EXISTENT_GRADE = -1;
+    
+    /**
      * The value of the least grade. This grade represents failure to pass a
      * course.
      */
