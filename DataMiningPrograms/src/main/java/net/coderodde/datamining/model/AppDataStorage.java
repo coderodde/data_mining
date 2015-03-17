@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import static net.coderodde.datamining.model.Course.COURSE_FAILED_GRADE;
+import static net.coderodde.datamining.utils.Utils.intersect;
+import static net.coderodde.datamining.utils.ValidationUtilities.checkNotMore;
 
 /**
  * This singleton class is responsible for organizing all the data such, that 
@@ -107,6 +109,10 @@ public class AppDataStorage {
                 }
             }
         }
+    }
+    
+    public int getStudentAmount() {
+        return studentMap.size();
     }
     
     /**
@@ -246,14 +252,51 @@ public class AppDataStorage {
         return false;
     }
     
-    public List<Student> queryStudents(final Course course, 
-                                       int minGrade,
-                                       int maxGrade) {
-        if (minGrade > maxGrade) {
-            int tmp = minGrade;
-            minGrade = maxGrade;
-            maxGrade = tmp;
+    public List<Student> queryStudents(final Set<Course> courseSet) {
+        final List<Student>[] lists = new ArrayList[courseSet.size()];
+        
+        int i = 0;
+        
+        for (final Course course : courseSet) {
+            lists[i++] = getStudentsByCourseName(course.getName());
         }
+        
+        final List<Student> ret = new ArrayList<>();
+        ret.addAll(intersect(lists));
+        return ret;
+    }
+    
+    public List<Student> queryStudents(final Set<Course> courseSet,
+                                       final int minGrade,
+                                       final int maxGrade) {
+        checkNotMore(minGrade, 
+                     maxGrade, 
+                     "The minimum and maximum grades ass-backwards.");
+        final List<Student>[] lists = new ArrayList[courseSet.size()];
+        
+        int i = 0;
+        
+        for (final Course course : courseSet) {
+            lists[i++] = getStudentsByCourseName(course.getName());
+            
+            for (int j = lists[i].size() - 1; j >= 0; --j) {
+                if (!hasGrade(lists[i].get(j), course, minGrade, maxGrade)) {
+                    lists[i].remove(j);
+                }
+            }
+        }
+        
+        final List<Student> ret = new ArrayList<>();
+        ret.addAll(intersect(lists));
+        return ret;
+    }
+    
+    public List<Student> queryStudents(final Course course, 
+                                       final int minGrade,
+                                       final int maxGrade) {
+        checkNotMore(minGrade, 
+                     maxGrade, 
+                     "Mininum and maximum grades ass-backwards.");
         
         final List<Student> studentList = 
                 getStudentsByCourseName(course.getName());

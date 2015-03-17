@@ -47,6 +47,7 @@ public class App {
         app.printAmountOfStudentsThatPassedBasicProgrammingCourses();
         app.printAmountOfStudentsWithThreeCourses();
         app.printAmountOfStudentsWithThreeCoursesWithCoolGrades();
+        app.printSupportForProgrammingCourses();
     }
 
     private void printAllCourseCodes() {
@@ -291,5 +292,57 @@ public class App {
                            "programming courses and the \"Data structures\" " +
                            "with grades 4 or 5: " + 
                            finalSet.size());
+    }
+    
+    private void printSupportForProgrammingCourses() {
+        final List<Student> basicStudentList = 
+                appData.getStudentsByCourseName("Ohjelmoinnin perusteet");
+        final List<Student> advancedStudentList1 =
+                appData.getStudentsByCourseName("Ohjelmoinnin jatkokurssi");
+        final List<Student> advancedStudentList2 =
+                appData.getStudentsByCourseName("Java-ohjelmointi");
+        
+        final Set<Student> set = new HashSet<>(basicStudentList);
+        final Set<Student> seta1 = new HashSet<>(advancedStudentList1);
+        final Set<Student> seta2 = new HashSet<>(advancedStudentList2);
+        
+        final Iterator<Student> iterator = set.iterator();
+        
+        while (iterator.hasNext()) {
+            final Student s = iterator.next();
+            
+            if (!seta1.contains(s) && !seta2.contains(s)) {
+                iterator.remove();
+            }
+        }
+        
+        System.out.println("Support of programming courses: " +
+                           (1.0f * set.size() / appData.getStudentAmount()));
+    }
+    
+    private void countHowManyContinueToAdvancedProgramming() {
+        final List<Student> basicStudentList = 
+                appData.getStudentsByCourseName("Ohjelmoinnin perusteet");
+        
+        final Set<Course> courseSet = new HashSet<>();
+        courseSet.add(appData.getCourseByName("Ohjelmoinnin jatkokurssi"));
+        courseSet.add(appData.getCourseByName("Java-ohjelmointi"));
+        
+        final List<Student> advancedStudentList =
+                appData.queryStudents(courseSet);
+        
+        final Set<Student> advancedStudentSet = new HashSet<>();
+        advancedStudentSet.addAll(advancedStudentList);
+        
+        int count = 0;
+        
+        for (final Student student : basicStudentList) {
+            if (advancedStudentSet.contains(student)) {
+                ++count;
+            }
+        }
+        
+        System.out.println(
+                "The amount of students having basic programming course and ");
     }
 }
