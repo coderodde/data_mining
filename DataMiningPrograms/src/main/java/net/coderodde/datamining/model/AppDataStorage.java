@@ -331,6 +331,29 @@ public class AppDataStorage {
         return 1.0 * count / getStudentAmount();
     }
     
+    public double confidence(final Set<Course> setx, final Set<Course> sety) {
+        checkIsAssociationRule(setx, sety);
+        final Set<Course> work = new HashSet<>(setx);
+        work.addAll(sety);
+        
+        int countXY = 0;
+        int countX = 0;
+        
+        for (final Student student : studentMap.keySet()) {
+            final Set<Course> courseSet = getStudentsAllCourses(student);
+            
+            if (containsAll(setx, courseSet)) {
+                ++countX;
+                
+                if (containsAll(work, courseSet)) {
+                    ++countXY;
+                }
+            }
+        }
+        
+        return 1.0 * countXY / countX;
+    }
+    
     public Set<Course> getStudentsAllCourses(final Student student) {
         final List<CourseAttendanceEntry> entryList = studentMap.get(student);
         final Set<Course> ret = new HashSet<>();

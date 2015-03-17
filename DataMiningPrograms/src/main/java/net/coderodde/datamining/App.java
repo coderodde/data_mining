@@ -52,6 +52,7 @@ public class App {
         app.printSupportOfBasicToAdvancedProgrammingCourse();
         app.printProbabilityFromBasicToAdvanced();
         app.printPercentageOfDataStructureStudents();
+        app.printConfidenceBasicToAdvancedProgrammingCourse();
     }
 
     private void printAllCourseCodes() {
@@ -454,5 +455,33 @@ public class App {
         System.out.println(
             "Percentage of students with both programming courses that " +
             "continue to Data structures: " + (1.0 * count / basicSet.size()));
+    }
+    
+    private void printConfidenceBasicToAdvancedProgrammingCourse() {
+        final Course basicCourse = 
+                appData.getCourseByName("Ohjelmoinnin perusteet");
+        
+        final Course advancedCourse1 = 
+                appData.getCourseByName("Ohjelmoinnin jatkokurssi");
+        
+        final Course advancedCourse2 =
+                appData.getCourseByName("Java-ohjelmointi");
+        
+        final Set<Course> setx = new HashSet<>();
+        setx.add(basicCourse);
+        
+        final Set<Course> sety = new HashSet<>();
+        sety.add(advancedCourse1);
+        
+        System.out.println(
+                "Confidence of (Ohjelmoinnin perusteet -> " +
+                "Ohjelmoinnin jatkokurssi): " + appData.confidence(setx, sety));
+        
+        sety.clear();
+        sety.add(advancedCourse2);
+        
+        System.out.println(
+                "Confidence of (Ohjelmoinnin perusteet -> " +
+                "Java-ohjelmointi): " + appData.confidence(setx, sety));
     }
 }
