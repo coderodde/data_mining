@@ -48,6 +48,10 @@ public class App {
         app.printAmountOfStudentsWithThreeCourses();
         app.printAmountOfStudentsWithThreeCoursesWithCoolGrades();
         app.printSupportForProgrammingCourses();
+        app.printHowManyContinueToAdvancedProgramming();
+        app.printSupportOfBasicToAdvancedProgrammingCourse();
+        app.printProbabilityFromBasicToAdvanced();
+        app.printPercentageOfDataStructureStudents();
     }
 
     private void printAllCourseCodes() {
@@ -320,29 +324,135 @@ public class App {
                            (1.0f * set.size() / appData.getStudentAmount()));
     }
     
-    private void countHowManyContinueToAdvancedProgramming() {
+    private void printHowManyContinueToAdvancedProgramming() {
         final List<Student> basicStudentList = 
                 appData.getStudentsByCourseName("Ohjelmoinnin perusteet");
         
-        final Set<Course> courseSet = new HashSet<>();
-        courseSet.add(appData.getCourseByName("Ohjelmoinnin jatkokurssi"));
-        courseSet.add(appData.getCourseByName("Java-ohjelmointi"));
+        final Set<Student> set1 = 
+                new HashSet<>(
+                        appData
+                        .getStudentsByCourseName("Ohjelmoinnin jatkokurssi"));
         
-        final List<Student> advancedStudentList =
-                appData.queryStudents(courseSet);
-        
-        final Set<Student> advancedStudentSet = new HashSet<>();
-        advancedStudentSet.addAll(advancedStudentList);
+        final Set<Student> set2 =
+                new HashSet<>(
+                appData
+                .getStudentsByCourseName("Java-ohjelmointi"));
         
         int count = 0;
         
         for (final Student student : basicStudentList) {
-            if (advancedStudentSet.contains(student)) {
+            if (set1.contains(student) || set2.contains(student)) {
                 ++count;
             }
         }
         
         System.out.println(
-                "The amount of students having basic programming course and ");
+                "The amount of students having basic programming course and " +
+                "continuing to advanced course: " + count);
+    }
+    
+    private void printSupportOfBasicToAdvancedProgrammingCourse() {
+        final Course basicCourse = 
+                appData.getCourseByName("Ohjelmoinnin perusteet");
+        final Course advancedCourse1 = 
+                appData.getCourseByName("Ohjelmoinnin jatkokurssi");
+        final Course advancedCourse2 =
+                appData.getCourseByName("Java-ohjelmointi");
+        
+        final Set<Course> x = new HashSet<>();
+        x.add(basicCourse);
+        
+        final Set<Course> y = new HashSet<>();
+        y.add(advancedCourse1);
+        
+        System.out.println(
+                "Ohjelmoinnin perusteet -> Ohjelmoinnin jatkokurssi: " +
+                appData.support(x, y));
+        
+        y.clear();
+        y.add(advancedCourse2);
+        
+        System.out.println(
+                "Ohjelmoinnin perusteet -> Java-ohjelmointi: " +
+                appData.support(x, y));
+    }
+    
+    private void printProbabilityFromBasicToAdvanced() {
+        final List<Student> basicStudentList = 
+                appData.getStudentsByCourseName("Ohjelmoinnin perusteet");
+        
+        final Set<Student> set1 = 
+                new HashSet<>(
+                        appData
+                        .getStudentsByCourseName("Ohjelmoinnin jatkokurssi"));
+        
+        final Set<Student> set2 =
+                new HashSet<>(
+                appData
+                .getStudentsByCourseName("Java-ohjelmointi"));
+        
+        int count = 0;
+        
+        for (final Student student : basicStudentList) {
+            if (set1.contains(student) || set2.contains(student)) {
+                ++count;
+            }
+        }
+        
+        System.out.println(
+                "The percentage of students continuing from basic to " + 
+                "advanced programming course: " + 
+                        (1.0 * count / basicStudentList.size()));
+        
+    }
+    
+    private void printPercentageOfDataStructureStudents() {
+        // Find all the students that took both basic and advanced programming
+        // courses.
+        
+        final Set<Student> basicSet = 
+                new HashSet<>(
+                        appData
+                        .getStudentsByCourseName("Ohjelmoinnin perusteet"));
+        
+        final Set<Student> advancedSet1 = 
+                new HashSet<>(
+                        appData
+                        .getStudentsByCourseName("Ohjelmoinnin jatkokurssi"));
+        
+        final Set<Student> advancedSet2 = 
+                new HashSet<>(
+                        appData
+                        .getStudentsByCourseName("Java-ohjelmointi"));
+        
+        final Iterator<Student> iterator = basicSet.iterator();
+        
+        while (iterator.hasNext()) {
+            final Student student = iterator.next();
+            
+            if (!advancedSet1.contains(student) 
+                    && !advancedSet2.contains(student)) {
+                iterator.remove();
+            }
+        }
+        
+        // Now basicSet contains all the students that have done both basic
+        // and advanced programming courses.
+        final Set<Student> dsSet = 
+                new HashSet<>(
+                    appData
+                    .getStudentsByCourseName("Tietorakenteet ja algoritmit"));
+        
+        int count = 0;
+        
+        for (final Student student : basicSet) {
+            if (dsSet.contains(student)) {
+                ++count;
+            }
+        }
+        
+        System.out.println(
+            "Percentage of students with both programming courses that " +
+            "continue to Data structures: " + (1.0 * count / basicSet.size()));
     }
 }

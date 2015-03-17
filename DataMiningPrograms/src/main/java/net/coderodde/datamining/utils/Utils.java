@@ -67,4 +67,25 @@ public class Utils {
         
         return intersect(sets);
     }
+    
+    /**
+     * Returns <code>true</code> if <code>set1</code> is contained in 
+     * <code>set2</code>.
+     * 
+     * @param <T>  the set element type.
+     * @param set1 the first set.
+     * @param set2 the second set.
+     * @return <code>true</code> if <code>set1</code> is contained entirely
+     *         in <code>set2</code>. 
+     */
+    public static <T> boolean containsAll(final Set<T> set1, 
+                                          final Set<T> set2) {
+        for (final T element : set1) {
+            if (!set2.contains(element)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
 }

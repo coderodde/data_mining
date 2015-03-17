@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import static net.coderodde.datamining.model.Course.COURSE_FAILED_GRADE;
+import static net.coderodde.datamining.utils.Utils.containsAll;
 import static net.coderodde.datamining.utils.Utils.intersect;
 import static net.coderodde.datamining.utils.ValidationUtilities.checkNotMore;
 
@@ -312,10 +313,50 @@ public class AppDataStorage {
         return ret;
     }
     
+    public double support(final Set<Course> setx, final Set<Course> sety) {
+        checkIsAssociationRule(setx, sety);
+        final Set<Course> work = new HashSet<>(setx);
+        work.addAll(sety);
+        
+        int count = 0;
+        
+        for (final Student student : studentMap.keySet()) {
+            final Set<Course> courseSet = getStudentsAllCourses(student);
+            
+            if (containsAll(work, courseSet)) {
+                ++count;
+            }
+        }
+        
+        return 1.0 * count / getStudentAmount();
+    }
+    
+    public Set<Course> getStudentsAllCourses(final Student student) {
+        final List<CourseAttendanceEntry> entryList = studentMap.get(student);
+        final Set<Course> ret = new HashSet<>();
+        
+        for (final CourseAttendanceEntry entry : entryList) {
+            ret.add(entry.getCourse());
+        }
+        
+        return ret;
+    }
+    
     private List<CourseAttendanceEntry> 
         initEntryList(final CourseAttendanceEntry entry) {
         final List<CourseAttendanceEntry> list = new ArrayList<>();
         list.add(entry);
         return list;
+    }
+        
+    private static <T> void checkIsAssociationRule(final Set<T> set1, 
+                                                   final Set<T> set2) {
+        for (final T element : set1) {
+            if (set2.contains(element)) {
+                throw new IllegalArgumentException(
+                        "Not an association rule. Both sets contain " +
+                        element.toString() + ".");
+            }
+        }
     }
 }
