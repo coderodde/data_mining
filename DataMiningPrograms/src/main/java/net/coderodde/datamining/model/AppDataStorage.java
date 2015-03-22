@@ -112,6 +112,36 @@ public class AppDataStorage {
         }
     }
     
+    public List<Student> getStudentsFrom(final Course course,
+                                         final int year,
+                                         final int month) {
+        final List<CourseAttendanceEntry> entryList = courseMap.get(course);
+        final Set<Student> studentSet = new HashSet<>();
+        
+        for (final CourseAttendanceEntry entry : entryList) {
+            if (entry.getYear() >= year && entry.getMonth() >= month) {
+                studentSet.add(entry.getStudent());
+            }
+        }
+        
+        return new ArrayList<>(studentSet);
+    }
+    
+    public List<Student> getStudentsUntil(final Course course,
+                                          final int year,
+                                          final int month) {
+        final List<CourseAttendanceEntry> entryList = courseMap.get(course);
+        final Set<Student> studentSet = new HashSet<>();
+        
+        for (final CourseAttendanceEntry entry : entryList) {
+            if (entry.getYear() <= year && entry.getMonth() <= month) {
+                studentSet.add(entry.getStudent());
+            }
+        }
+        
+        return new ArrayList<>(studentSet);
+    }
+    
     public int getStudentAmount() {
         return studentMap.size();
     }

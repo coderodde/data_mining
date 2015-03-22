@@ -3,12 +3,14 @@ package net.coderodde.datamining;
 import java.io.File;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import net.coderodde.datamining.loader.support.DataLoaderv1;
 import net.coderodde.datamining.model.AppDataStorage;
 import net.coderodde.datamining.model.Course;
 import net.coderodde.datamining.model.Student;
+import static net.coderodde.datamining.utils.Utils.intersect;
 
 /**
  * This class defines the entry point of the program.
@@ -40,19 +42,27 @@ public class App {
         final App app = new App(appData);
         
 //        app.printAllCourseCodes();
-        app.printAmountOfIntroProgrammingStudents();
-        app.printAmountOfIntroProgrammingStudentsThatPassed();
-        app.printAmountOfAdvancedProgrammingStudentsThatPassed();
-        app.printAmountOfDatasturcuteStudentsThatPassedWith45();
-        app.printAmountOfStudentsThatPassedBasicProgrammingCourses();
-        app.printAmountOfStudentsWithThreeCourses();
-        app.printAmountOfStudentsWithThreeCoursesWithCoolGrades();
-        app.printSupportForProgrammingCourses();
-        app.printHowManyContinueToAdvancedProgramming();
-        app.printSupportOfBasicToAdvancedProgrammingCourse();
-        app.printProbabilityFromBasicToAdvanced();
-        app.printPercentageOfDataStructureStudents();
-        app.printConfidenceBasicToAdvancedProgrammingCourse();
+//        app.printCourseNames();
+//        app.printProgrammingCourses();
+//        app.printAmountOfIntroProgrammingStudents();
+//        app.printAmountOfIntroProgrammingStudentsThatPassed();
+//        app.printAmountOfAdvancedProgrammingStudentsThatPassed();
+//        app.printAmountOfDatasturcuteStudentsThatPassedWith45();
+//        app.printAmountOfStudentsThatPassedBasicProgrammingCourses();
+//        app.printAmountOfStudentsWithThreeCourses();
+//        app.printAmountOfStudentsWithThreeCoursesWithCoolGrades();
+//        app.printSupportForProgrammingCourses();
+//        app.printHowManyContinueToAdvancedProgramming();
+//        app.printSupportOfBasicToAdvancedProgrammingCourse();
+//        app.printProbabilityFromBasicToAdvanced();
+//        app.printPercentageOfDataStructureStudents();
+//        app.printConfidenceBasicToAdvancedProgrammingCourse();
+//        app.printDifferentUniqueCourses();
+//        app.printCourseTwoCombinations();
+//        app.printCourseThreeCombinations();
+//        app.printCourseFiveCombinations();
+        app.printOldCourseGradePairs();
+        app.printNewCourseGradePairs();
     }
 
     private void printAllCourseCodes() {
@@ -483,5 +493,204 @@ public class App {
         System.out.println(
                 "Confidence of (Ohjelmoinnin perusteet -> " +
                 "Java-ohjelmointi): " + appData.confidence(setx, sety));
+    }
+    
+    private void printDifferentUniqueCourses() {
+        final Set<Course> set = new LinkedHashSet<>(appData.getCourseList());
+        
+        for (final Course course : set) {
+            System.out.println(course);
+        }
+    }
+    
+    private void printCourseTwoCombinations() {
+        final List<Course> list = appData.getCourseList();
+        
+        final long ta = System.currentTimeMillis();
+        
+        for (int index1 = 0; index1 < list.size(); ++index1) {
+            for (int index2 = index1 + 1; index2 < list.size(); ++index2) {
+                
+            }
+        }
+        
+        final long tb = System.currentTimeMillis();
+        
+        System.out.println(
+                "Duration for 2-combinations: " + (tb - ta) + " ms.");
+    }
+    
+    private void printCourseThreeCombinations() {
+        final List<Course> list = appData.getCourseList();
+        
+        final long ta = System.currentTimeMillis();
+        
+        for (int index1 = 0; index1 < list.size(); ++index1) {
+            for (int index2 = index1 + 1; index2 < list.size(); ++index2) {
+                for (int index3 = index2 + 1; index3 < list.size(); ++index3) {
+                    
+                }
+            }
+        }
+        
+        final long tb = System.currentTimeMillis();
+        
+        System.out.println(
+                "Duration for 3-combinations: " + (tb - ta) + " ms.");
+    }
+    
+    private void printCourseFiveCombinations() {
+        final List<Course> list = appData.getCourseList();
+        
+        final int N = list.size();
+        final long ta = System.currentTimeMillis();
+        
+        for (int index1 = 0; index1 < N; ++index1) {
+            for (int index2 = index1 + 1; index2 < N; ++index2) {
+                for (int index3 = index2 + 1; index3 < N; ++index3) {
+                    for (int index4 = index3 + 1; index4 < N; ++index4) {
+                        
+                    }
+                }
+            }
+        }
+        
+        final long tb = System.currentTimeMillis();
+        
+        System.out.println(
+                "Duration for 4-combinations: " + (tb - ta) + " ms.");
+    }
+
+    private void printCourseNames() {
+        for (final Course course : appData.getCourseList()) {
+            System.out.println(course);
+        }
+    }
+    
+    private void printProgrammingCourses() {
+        for (final Course course : appData.getCourseList()) {
+            if (course.getName().contains("hjelmoin") 
+                    || course.getName().contains("rogramming")
+                    || course.getName().contains("lgoritmi")
+                    || course.getName().contains("lgorithm")) {
+                System.out.println(course);
+            }
+        }
+    }
+    
+    /**
+     * This method is responsible for printing the grade pairs of the basic and
+     * advanced programming courses, both according to the old curriculum.
+     */
+    private void printOldCourseGradePairs() {
+        System.out.println("--- Old grade pairs ---");
+        
+        final Course basicCourse = 
+                appData.getCourseByName("Ohjelmoinnin perusteet");
+        
+        final Course advancedCourse =
+                appData.getCourseByName("Ohjelmoinnin jatkokurssi");
+        
+        final Set<Student> basicStudentSet = 
+                new HashSet<>(appData.getStudentsUntil(basicCourse, 2009, 12));
+        
+        final Set<Student> advStudentSet =
+                new HashSet<>(appData.getStudentsUntil(advancedCourse, 
+                                                       2009, 
+                                                       12));
+        
+        System.out.println("Total students at basic course: " + 
+                           basicStudentSet.size());
+        
+        System.out.println("Total students at advanced course: " +
+                           advStudentSet.size());
+        
+        final Set<Student> intersection = intersect(basicStudentSet,
+                                                    advStudentSet);
+        
+        System.out.println("Total students at both courses: " + 
+                           intersection.size());
+        
+        final StringBuilder sb = new StringBuilder();
+        int index = 0;
+        
+        for (final Student student : intersection) {
+            if (index == 0) {
+                sb.append("[[");
+            } else {
+                sb.append(" [");
+            }
+            
+            sb.append(appData.grade(student, basicCourse))
+              .append(", ")
+              .append(appData.grade(student, advancedCourse));
+            
+            if (index++ < intersection.size() - 1) {
+                sb.append("],\n");
+            } else {
+                sb.append("]]");
+            }
+        }
+        
+        System.out.println("Data:");
+        System.out.println(sb.toString());
+    }
+    
+    /**
+     * This method is responsible for printing the grade pairs of the basic and
+     * advanced programming courses, both according to the new curriculum.
+     */
+    private void printNewCourseGradePairs() {
+        System.out.println("--- New grade pairs ---");
+        
+        final Course basicCourse = 
+                appData.getCourseByName("Ohjelmoinnin perusteet");
+        
+        final Course advancedCourse =
+                appData.getCourseByName("Ohjelmoinnin jatkokurssi");
+        
+        final Set<Student> basicStudentSet = 
+                new HashSet<>(appData.getStudentsFrom(basicCourse, 2010, 1));
+        
+        final Set<Student> advStudentSet =
+                new HashSet<>(appData.getStudentsFrom(advancedCourse, 
+                                                      2010, 
+                                                      1));
+        
+        System.out.println("Total students at basic course: " + 
+                           basicStudentSet.size());
+        
+        System.out.println("Total students at advanced course: " +
+                           advStudentSet.size());
+        
+        final Set<Student> intersection = intersect(basicStudentSet,
+                                                    advStudentSet);
+        
+        System.out.println("Total students at both courses: " + 
+                           intersection.size());
+        
+        final StringBuilder sb = new StringBuilder();
+        int index = 0;
+        
+        for (final Student student : intersection) {
+            if (index == 0) {
+                sb.append("[[");
+            } else {
+                sb.append(" [");
+            }
+            
+            sb.append(appData.grade(student, basicCourse))
+              .append(", ")
+              .append(appData.grade(student, advancedCourse));
+            
+            if (index++ < intersection.size() - 1) {
+                sb.append("],\n");
+            } else {
+                sb.append("]]");
+            }
+        }
+        
+        System.out.println("Data:");
+        System.out.println(sb.toString());
     }
 }
