@@ -343,6 +343,8 @@ public class AppDataStorage {
         return ret;
     }
     
+    
+    
     public double support(final Set<Course> setx, final Set<Course> sety) {
         checkIsAssociationRule(setx, sety);
         final Set<Course> work = new HashSet<>(setx);
@@ -359,6 +361,54 @@ public class AppDataStorage {
         }
         
         return 1.0 * count / getStudentAmount();
+    }
+    
+    public Set<Set<Course>> apriori(final double minSupport) {
+        final Map<Integer, Set<Set<Course>>> map = new HashMap<>();
+        final Map<Set<Course>, Integer> sigma = new HashMap<>();
+        
+        map.put(1, new HashSet<Set<Course>>());
+        
+        for (final Course course : getCourseList()) {
+            final int supportCount = supportCount(course);
+            final double support = 1.0 * supportCount / studentMap.size();
+            
+            if (support >= minSupport) {
+                final Set<Course> itemSet = new HashSet<>(1);
+                itemSet.add(course);
+                map.get(1).add(itemSet);
+                sigma.put(itemSet, supportCount);
+            }
+        }
+        
+        int k = 1;
+        
+        do {
+            ++k;
+            System.out.println("k: " + k);
+            final Set<Set<Course>> candidateSet = 
+                    generateCandidates(map.get(k - 1));
+            
+            for (final Student student : studentMap.keySet()) {
+                final Set<Course> transaction = getStudentsAllCourses(student);
+                final Set<Set<Course>> candidateSet2 = subset(candidateSet, 
+                                                              transaction);
+                
+                for (final Set<Course> itemset : candidateSet2) {
+                    if (!sigma.containsKey(itemset)) {
+                        sigma.put(itemset, 1);
+                    } else {
+                        sigma.put(itemset, sigma.get(itemset) + 1);
+                    }
+                }
+            }
+            
+            map.put(k, getNextItemsets(candidateSet, 
+                                       sigma,
+                                       (int)(minSupport * studentMap.size())));
+        } while (map.get(k).size() > 0);
+        
+        return extractItemSets(map);
     }
     
     public double confidence(final Set<Course> setx, final Set<Course> sety) {
@@ -395,6 +445,36 @@ public class AppDataStorage {
         return ret;
     }
     
+    public double support(final Course course) {
+        int count = 0;
+        
+        for (final Student student : studentMap.keySet()) {
+            final List<CourseAttendanceEntry> list = 
+                    matrix.get(student).get(course);
+            
+            if (list != null && list.size() > 0) {
+                ++count;
+            }
+        }
+        
+        return 1.0 * count / studentMap.size();
+    }
+    
+    public int supportCount(final Course course) {
+        int count = 0;
+        
+        for (final Student student : studentMap.keySet()) {
+            final List<CourseAttendanceEntry> list = 
+                    matrix.get(student).get(course);
+            
+            if (list != null && list.size() > 0) {
+                ++count;
+            }
+        }
+        
+        return count;
+    }
+    
     private List<CourseAttendanceEntry> 
         initEntryList(final CourseAttendanceEntry entry) {
         final List<CourseAttendanceEntry> list = new ArrayList<>();
@@ -411,5 +491,112 @@ public class AppDataStorage {
                         element.toString() + ".");
             }
         }
+    }
+
+    private Set<Set<Course>> 
+        extractItemSets(final Map<Integer, Set<Set<Course>>> map) {
+        final Set<Set<Course>> ret = new HashSet<>();
+        
+        for (final Set<Set<Course>> kItemSets : map.values()) {
+            ret.addAll(kItemSets);
+        }
+        
+        return ret;
+    }
+
+    /**
+     * Returns all those itemsest from <code>set</code> that are contained by
+     * <code>transaction</code>.
+     * 
+     * @param set         the set of itemsets.
+     * @param transaction a transaction.
+     * @return            the set of itemsets that are contained by 
+     *                    <code>transaction</code>.
+     */
+    private Set<Set<Course>> subset(final Set<Set<Course>> set,
+                                    final Set<Course> transaction) {
+        final Set<Set<Course>> ret = new HashSet<>();
+        
+        for (final Set<Course> itemset : set) {
+            if (containsAll(itemset, transaction)) {
+                ret.add(itemset);
+            }
+        }
+        
+        return ret;
+    }
+
+    /**
+     * Generates the <code>(k + 1)</code>-itemsets from the set of 
+     * <code>k</code>-itemsets.
+     * 
+     * @param  set the set of itemsets.
+     * @return a set of candidate itemsets.
+     */
+    private Set<Set<Course>> generateCandidates(final Set<Set<Course>> set) {
+        final List<List<Course>> list = new ArrayList<>(set.size());
+        
+        for (final Set<Course> itemset : set) {
+            final List<Course> l = new ArrayList<>(itemset);
+            Collections.sort(l);
+            list.add(l);
+        }
+        
+        final int N = list.size();
+        final Set<Set<Course>> ret = new HashSet<>(list.size());
+        
+        for (int index1 = 0; index1 < N; ++index1) {
+            for (int index2 = index1 + 1; index2 < N; ++index2) {
+                final Set<Course> candidate = 
+                        tryMergeItemsets(list.get(index1), 
+                                         list.get(index2));
+                
+                if (candidate != null) {
+                    ret.add(candidate);
+                }
+            }
+        }
+        
+        return ret;
+    }
+    
+    private Set<Course> tryMergeItemsets(final List<Course> itemset1,
+                                         final List<Course> itemset2) {
+        final int length = itemset1.size();
+        
+        for (int i = 0; i < length - 1; ++i) {
+            if (!itemset1.get(i).equals(itemset2.get(i))) {
+                return null;
+            }
+        }
+        
+        if (itemset1.get(length - 1).equals(itemset2.get(length - 1))) {
+            return null;
+        }
+        
+        final Set<Course> itemset = new HashSet<>(itemset1.size() + 1);
+        
+        for (int i = 0; i < length - 1; ++i) {
+            itemset.add(itemset1.get(i));
+        }
+        
+        itemset.add(itemset1.get(length - 1));
+        itemset.add(itemset2.get(length - 1));
+        return itemset;
+    }
+
+    private Set<Set<Course>> 
+        getNextItemsets(final Set<Set<Course>> candidateSet, 
+                        final Map<Set<Course>, Integer> sigma,
+                        final int minSupportCount) {
+        final Set<Set<Course>> ret = new HashSet<>(candidateSet.size());
+        
+        for (final Set<Course> itemset : candidateSet) {
+            if (sigma.get(itemset) >= minSupportCount) {
+                ret.add(itemset);
+            }
+        }
+        
+        return ret;
     }
 }

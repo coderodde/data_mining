@@ -11,7 +11,7 @@ import static net.coderodde.datamining.utils.ValidationUtilities.checkNotNull;
  * @author Rodion Efremov
  * @version 1.6
  */
-public class Course {
+public class Course implements Comparable<Course> {
     
     /**
      * The value representing that the target grade does not exist.
@@ -123,6 +123,11 @@ public class Course {
                 (gradingMode == GRADING_MODE_PASS_FAIL ? 
                  "binary scale, " : "normal scale, ") +
                 credits + " credits]";
+    }
+
+    @Override
+    public int compareTo(Course o) {
+        return getCode().compareTo(o.getCode());
     }
     
     public static final class NameSelector {

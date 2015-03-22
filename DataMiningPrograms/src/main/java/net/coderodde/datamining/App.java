@@ -1,6 +1,7 @@
 package net.coderodde.datamining;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -61,8 +62,10 @@ public class App {
 //        app.printCourseTwoCombinations();
 //        app.printCourseThreeCombinations();
 //        app.printCourseFiveCombinations();
-        app.printOldCourseGradePairs();
-        app.printNewCourseGradePairs();
+//        app.printOldCourseGradePairs();
+//        app.printNewCourseGradePairs();
+//        app.printTwoCourseCombinationsWithSupportOver03();
+        app.printTwoCourseCombinationsWithSupportOver03Apriori();
     }
 
     private void printAllCourseCodes() {
@@ -545,11 +548,15 @@ public class App {
         final int N = list.size();
         final long ta = System.currentTimeMillis();
         
+        System.out.println("N: " + N);
+        
         for (int index1 = 0; index1 < N; ++index1) {
             for (int index2 = index1 + 1; index2 < N; ++index2) {
                 for (int index3 = index2 + 1; index3 < N; ++index3) {
                     for (int index4 = index3 + 1; index4 < N; ++index4) {
-                        
+                        for (int index5 = index4 + 1; index5 < N; ++index5) {
+                            
+                        }
                     }
                 }
             }
@@ -558,7 +565,7 @@ public class App {
         final long tb = System.currentTimeMillis();
         
         System.out.println(
-                "Duration for 4-combinations: " + (tb - ta) + " ms.");
+                "Duration for 5-combinations: " + (tb - ta) + " ms.");
     }
 
     private void printCourseNames() {
@@ -590,6 +597,9 @@ public class App {
         
         final Course advancedCourse =
                 appData.getCourseByName("Ohjelmoinnin jatkokurssi");
+        
+        System.out.println(basicCourse);
+        System.out.println(advancedCourse);
         
         final Set<Student> basicStudentSet = 
                 new HashSet<>(appData.getStudentsUntil(basicCourse, 2009, 12));
@@ -692,5 +702,86 @@ public class App {
         
         System.out.println("Data:");
         System.out.println(sb.toString());
+    }
+    
+    private void printTwoCourseCombinationsWithNonzeroSupport() {
+        final List<Course> courseList = appData.getCourseList();
+        final Set<Course> workSet = new HashSet<>(2);
+        final int N = courseList.size();
+        int count = 0;
+        
+        for (int index1 = 0; index1 < N; ++index1) {
+            final Course a = courseList.get(index1);
+            workSet.add(a);
+            
+            for (int index2 = index1 + 1; index2 < N; ++index2) {
+                final Course b = courseList.get(index2);
+                workSet.add(b);
+                
+                if (appData.support(workSet, 
+                                    Collections.<Course>emptySet()) > 0.0) {
+                    ++count;
+//                    System.out.println(workSet);
+                } 
+                
+                workSet.remove(b);
+            }
+            
+            workSet.remove(a);
+        }
+        
+        // Produced 15198 combinations in 2:42.
+        System.out.println(
+                "2-course combinations with nonzero support: " + count);
+    }
+    
+    private void printTwoCourseCombinationsWithSupportOver03Apriori() {
+        final long ta = System.currentTimeMillis();
+        final Set<Set<Course>> frequentItemsets = 
+                appData.apriori(0.3);
+        final long tb = System.currentTimeMillis();
+        
+        int count = 0;
+        
+        for (final Set<Course> itemset : frequentItemsets) {
+            if (itemset.size() == 2) {
+                System.out.println("Support: " + appData.support(itemset, Collections.<Course>emptySet()));
+                ++count;
+            }
+        }
+        
+        System.out.println("Found " + count + " in " + (tb - ta) + " ms.");
+        System.out.println("Total frequent itemsets: " + 
+                           frequentItemsets.size());
+    }
+    
+    private void printTwoCourseCombinationsWithSupportOver03() {
+        final List<Course> courseList = appData.getCourseList();
+        final Set<Course> workSet = new HashSet<>(2);
+        final int N = courseList.size();
+        int count = 0;
+        
+        for (int index1 = 0; index1 < N; ++index1) {
+            final Course a = courseList.get(index1);
+            workSet.add(a);
+            
+            for (int index2 = index1 + 1; index2 < N; ++index2) {
+                final Course b = courseList.get(index2);
+                workSet.add(b);
+                
+                if (appData.support(workSet, 
+                                    Collections.<Course>emptySet()) >= 0.3) {
+                    ++count;
+                } 
+                
+                workSet.remove(b);
+            }
+            
+            workSet.remove(a);
+        }
+        
+        // Produced 3 combinations in 2:35.
+        System.out.println(
+                "2-course combinations with support > 0.3: " + count);
     }
 }
