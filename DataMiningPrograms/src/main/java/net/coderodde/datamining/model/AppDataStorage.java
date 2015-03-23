@@ -347,6 +347,62 @@ public class AppDataStorage {
         return ret;
     }
     
+    public Map<Course, Map<Course, Map<Course, Integer>>> getSupportCube() {
+        final int N = courseList.size();
+        final Map<Course, Map<Course, Map<Course, Integer>>> map = 
+                new HashMap<>(N);
+        
+        // Initialize the support cube.
+        for (int index1 = 0; index1 < N; ++index1) {
+            final Course course1 = courseList.get(index1);
+            final Map<Course, Map<Course, Integer>> submap = new HashMap<>(N);
+            map.put(course1, submap);
+            
+            for (int index2 = 0; index2 < N; ++index2) {
+                final Course course2 = courseList.get(index2);
+                final Map<Course, Integer> subsubmap = new HashMap<>(N);
+                submap.put(course2, subsubmap);
+                
+                for (int index3 = 0; index3 < N; ++index3) {
+                    final Course course3 = courseList.get(index3);
+                    subsubmap.put(course3, 0);
+                }
+            }
+        }
+        
+        // Count the supports.
+        for (final Student student : studentMap.keySet()) {
+            final Set<Course> studentCourseSet = getStudentsAllCourses(student);
+            final List<Course> studentCourseList = 
+                    new ArrayList<>(studentCourseSet);
+            final int LIST_SIZE  = studentCourseList.size();
+            
+            // Iterate over all 3-combinations and update the support matrix.
+            for (int index1 = 0; index1 < LIST_SIZE; ++index1) {
+                final Course course1 = studentCourseList.get(index1);
+                
+                for (int index2 = index1 + 1; index2 < LIST_SIZE; ++index2) {
+                    final Course course2 = studentCourseList.get(index2);
+                    
+                    for (int index3 = index2 + 1; index3 < LIST_SIZE; ++index3) {
+                        final Course course3 = studentCourseList.get(index3);
+                        final int currentSupport =
+                                map.get(course1).get(course2).get(course3);
+                        
+                        map.get(course1).get(course2).put(course3, currentSupport + 1);
+                        map.get(course1).get(course3).put(course2, currentSupport + 1);
+                        map.get(course2).get(course1).put(course3, currentSupport + 1);
+                        map.get(course2).get(course3).put(course1, currentSupport + 1);
+                        map.get(course3).get(course1).put(course2, currentSupport + 1);
+                        map.get(course3).get(course2).put(course1, currentSupport + 1);
+                    }
+                }
+            }
+        }
+        
+        return map;
+    }
+    
     public Map<Course, Map<Course, Integer>> getSupportMatrix() {
         final int N = courseList.size();
         final Map<Course, Map<Course, Integer>> map = new HashMap<>(N);
@@ -436,7 +492,7 @@ public class AppDataStorage {
             final int supportCount = supportCount(course);
             final double support = 1.0 * supportCount / studentMap.size();
             
-            if (support >= minSupport) {
+            if (support > minSupport) {
                 final Set<Course> itemSet = new HashSet<>(1);
                 itemSet.add(course);
                 map.get(1).add(itemSet);
@@ -448,7 +504,7 @@ public class AppDataStorage {
         
         do {
             ++k;
-            System.out.println("k: " + k);
+            
             final Set<Set<Course>> candidateSet = 
                     generateCandidates(map.get(k - 1));
             
