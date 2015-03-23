@@ -146,6 +146,10 @@ public class AppDataStorage {
         return studentMap.size();
     }
     
+    public int getCourseAmount() {
+        return courseMap.size();
+    }
+    
     /**
      * Returns a list view containing all the courses.
      * 
@@ -343,7 +347,44 @@ public class AppDataStorage {
         return ret;
     }
     
-    
+    public Map<Course, Map<Course, Integer>> getSupportMatrix() {
+        final int N = courseList.size();
+        final Map<Course, Map<Course, Integer>> map = new HashMap<>(N);
+        
+        // Initialize the support matrix.
+        for (int index1 = 0; index1 < N; ++index1) {
+            final Course course1 = courseList.get(index1);
+            final Map<Course, Integer> submap = new HashMap<>(N);
+            map.put(course1, submap);
+            
+            for (int index2 = 0; index2 < N; ++index2) {
+                final Course course2 = courseList.get(index2);
+                submap.put(course2, 0);
+            }
+        }
+        
+        // Count the supports.
+        for (final Student student : studentMap.keySet()) {
+            final Set<Course> studentCourseSet = getStudentsAllCourses(student);
+            final List<Course> studentCourseList = 
+                    new ArrayList<>(studentCourseSet);
+            final int LIST_SIZE  = studentCourseList.size();
+            
+            // Iterate over all 2-combinations and update the support matrix.
+            for (int index1 = 0; index1 < LIST_SIZE; ++index1) {
+                final Course course1 = studentCourseList.get(index1);
+                
+                for (int index2 = index1 + 1; index2 < LIST_SIZE; ++index2) {
+                    final Course course2 = studentCourseList.get(index2);
+                    final int currentSupport = map.get(course1).get(course2);
+                    map.get(course1).put(course2, currentSupport + 1);
+                    map.get(course2).put(course1, currentSupport + 1);
+                }
+            }
+        }
+        
+        return map;
+    }
     
     public double support(final Set<Course> setx, final Set<Course> sety) {
         checkIsAssociationRule(setx, sety);
@@ -357,6 +398,28 @@ public class AppDataStorage {
             
             if (containsAll(work, courseSet)) {
                 ++count;
+            }
+        }
+        
+        return 1.0 * count / getStudentAmount();
+    }
+    
+    public double supportStopAfter(final Set<Course> setx, 
+                                   final Set<Course> sety,
+                                   final int threshold) {
+        checkIsAssociationRule(setx, sety);
+        final Set<Course> work = new HashSet<>(setx);
+        work.addAll(sety);
+        
+        int count = 0;
+        
+        for (final Student student : studentMap.keySet()) {
+            final Set<Course> courseSet = getStudentsAllCourses(student);
+            
+            if (containsAll(work, courseSet)) {
+                if (++count >= threshold) {
+                    break;
+                }
             }
         }
         
@@ -592,7 +655,8 @@ public class AppDataStorage {
         final Set<Set<Course>> ret = new HashSet<>(candidateSet.size());
         
         for (final Set<Course> itemset : candidateSet) {
-            if (sigma.get(itemset) >= minSupportCount) {
+            if (sigma.get(itemset) != null 
+                    && sigma.get(itemset) >= minSupportCount) {
                 ret.add(itemset);
             }
         }

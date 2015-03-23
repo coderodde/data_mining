@@ -1,11 +1,14 @@
 package net.coderodde.datamining;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import net.coderodde.datamining.loader.support.DataLoaderv1;
 import net.coderodde.datamining.model.AppDataStorage;
@@ -65,7 +68,10 @@ public class App {
 //        app.printOldCourseGradePairs();
 //        app.printNewCourseGradePairs();
 //        app.printTwoCourseCombinationsWithSupportOver03();
-        app.printTwoCourseCombinationsWithSupportOver03Apriori();
+//        app.printTwoCourseCombinationsWithSupportOver03Apriori();
+//        app.printThreeCourseCombinationsWithSupportOver0175Apriori();
+        app.printTwoCourseCombinationsWithSupportOver03Funky();
+//        app.printThreeCourseCombinationsWithSupportOver0175();
     }
 
     private void printAllCourseCodes() {
@@ -745,20 +751,57 @@ public class App {
         
         for (final Set<Course> itemset : frequentItemsets) {
             if (itemset.size() == 2) {
-                System.out.println("Support: " + appData.support(itemset, Collections.<Course>emptySet()));
+                System.out.println(
+                        "Support: " + 
+                        appData.support(itemset, 
+                                        Collections.<Course>emptySet()));
                 ++count;
             }
         }
         
-        System.out.println("Found " + count + " in " + (tb - ta) + " ms.");
         System.out.println("Total frequent itemsets: " + 
                            frequentItemsets.size());
+        System.out.println("Found " + count + " in " + (tb - ta) + " ms.");
+    }
+    
+    private void printTwoCourseCombinationsWithSupportOver03Funky() {
+        final Map<Course, Map<Course, Integer>> supportMatrix =
+                appData.getSupportMatrix();
+        
+        final List<Course> courseList = appData.getCourseList();
+        final int N = courseList.size();
+        final int ROWS = appData.getStudentAmount();
+        final List<List<Course>> outputList = new ArrayList<>();
+        
+        System.out.println("Rows: " + ROWS);
+        
+        for (int index1 = 0; index1 < N; ++index1) {
+            final Course a = courseList.get(index1);
+            
+            for (int index2 = index1 + 1; index2 < N; ++index2) {
+                final Course b = courseList.get(index2);
+                
+                System.out.println((1.0 * supportMatrix.get(a).get(b) / ROWS));
+                if ((1.0 * supportMatrix.get(a).get(b)) / ROWS >= 0.3) {
+                    final List<Course> combination = new ArrayList<>(2);
+                    combination.add(a);
+                    combination.add(b);
+                    outputList.add(combination);
+                }
+            }
+        }
+        
+        // Produced 3 combinations in 2:35.
+        System.out.println(
+                "2-course combinations with support > 0.3: " + 
+                outputList.size());
     }
     
     private void printTwoCourseCombinationsWithSupportOver03() {
         final List<Course> courseList = appData.getCourseList();
         final Set<Course> workSet = new HashSet<>(2);
         final int N = courseList.size();
+        final int threshold = (int)(0.3 * appData.getStudentAmount());
         int count = 0;
         
         for (int index1 = 0; index1 < N; ++index1) {
@@ -769,8 +812,10 @@ public class App {
                 final Course b = courseList.get(index2);
                 workSet.add(b);
                 
-                if (appData.support(workSet, 
-                                    Collections.<Course>emptySet()) >= 0.3) {
+                if (appData
+                        .supportStopAfter(workSet, 
+                                          Collections.<Course>emptySet(),
+                                          threshold) >= 0.3) {
                     ++count;
                 } 
                 
@@ -783,5 +828,68 @@ public class App {
         // Produced 3 combinations in 2:35.
         System.out.println(
                 "2-course combinations with support > 0.3: " + count);
+    }
+    
+    private void printThreeCourseCombinationsWithSupportOver0175() {
+        final List<Course> courseList = appData.getCourseList();
+        final Set<Course> workSet = new HashSet<>(3);
+        final int N = courseList.size();
+        final int threshold = (int)(0.175 * appData.getStudentAmount());
+        int count = 0;
+        
+        for (int index1 = 0; index1 < N; ++index1) {
+            final Course a = courseList.get(index1);
+            workSet.add(a);
+            
+            for (int index2 = index1 + 1; index2 < N; ++index2) {
+                final Course b = courseList.get(index2);
+                workSet.add(b);
+                
+                for (int index3 = index2 + 1; index3 < N; ++index3) {
+                    final Course c = courseList.get(index3);
+                    workSet.add(c);
+                    
+                    if (appData.
+                            supportStopAfter(workSet, 
+                                             Collections.<Course>emptySet(),
+                                             threshold) >= 0.175) {
+                        ++count;
+                    } 
+                    
+                    workSet.remove(c);
+                }
+                
+                workSet.remove(b);
+            }
+            
+            workSet.remove(a);
+        }
+        
+        // Produced 3 combinations in 2:35.
+        System.out.println(
+                "2-course combinations with support > 0.3: " + count);
+    }
+    
+    private void printThreeCourseCombinationsWithSupportOver0175Apriori() {
+        final long ta = System.currentTimeMillis();
+        final Set<Set<Course>> frequentItemsets = 
+                appData.apriori(0.175);
+        final long tb = System.currentTimeMillis();
+        
+        int count = 0;
+        
+        for (final Set<Course> itemset : frequentItemsets) {
+            if (itemset.size() == 3) {
+                System.out.println(
+                        "Support: " + 
+                        appData.support(itemset, 
+                                        Collections.<Course>emptySet()));
+                ++count;
+            }
+        }
+        
+        System.out.println("Total frequent itemsets: " + 
+                           frequentItemsets.size());
+        System.out.println("Found " + count + " in " + (tb - ta) + " ms.");
     }
 }
