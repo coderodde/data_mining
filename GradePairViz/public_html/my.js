@@ -464,9 +464,9 @@ function set_matrix(matrix, grade_pairs) {
 // if weight is 1, return the color string representing blue.
 function get_color_string(weight) {
     weight = 1 - weight;
-    var red = Math.round(255 * weight).toString(16);
-    var green = Math.round(255 * weight).toString(16);
-    return "#" + red + green + "ff";
+    var red = Math.floor(255 * weight).toString(16);
+    var green = Math.floor(255 * weight).toString(16);
+    return "#" + red + "" +  green + "ff";
 }
 
 function get_maximum_cell(matrix) {
@@ -511,7 +511,7 @@ function draw_matrix(matrix, canvas) {
     // Draw the actual visualization.
     for (var y = 0; y <= 5; ++y) {
         for (var x = 0; x <= 5; ++x) {
-            ctx.fillStyle = get_color_string(matrix[y][x]);
+            ctx.fillStyle = get_color_string(matrix[5 - y][x]);
             ctx.fillRect(40 + x * 60, (5 - y) * 60, 60, 60);
         }
     }

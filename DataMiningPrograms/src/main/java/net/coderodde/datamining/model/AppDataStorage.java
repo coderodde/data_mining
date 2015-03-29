@@ -110,6 +110,8 @@ public class AppDataStorage {
                 }
             }
         }
+        
+        Collections.sort(courseList);
     }
     
     public List<Student> getStudentsFrom(final Course course,
@@ -345,6 +347,73 @@ public class AppDataStorage {
         }
         
         return ret;
+    }
+    
+    public Map<Course, Map<Course, Map<Course, Map<Course, Integer>>>> 
+            getSupport4DMatrix() {
+        final int N = courseList.size();
+        final Map<Course, Map<Course, Map<Course, Map<Course, Integer>>>> map =
+                new HashMap<>(N);
+        
+        // Initialize the matrix.
+        for (int i1 = 0; i1 < N; ++i1) {
+            final Course c1 = courseList.get(i1);
+            final Map<Course, Map<Course, Map<Course, Integer>>> submap1 =
+                    new HashMap<>();
+            map.put(c1, submap1);
+            
+            for (int i2 = i1 + 1; i2 < N; ++i2) {
+                final Course c2 = courseList.get(i2);
+                final Map<Course, Map<Course, Integer>> submap2 = 
+                        new HashMap<>();
+                submap1.put(c2, submap2);
+                
+                for (int i3 = i2 + 1; i3 < N; ++i3) {
+                    final Course c3 = courseList.get(i3);
+                    final Map<Course, Integer> submap3 = new HashMap<>();
+                    submap2.put(c3, submap3);
+                    
+                    for (int i4 = i3 + 1; i4 < N; ++i4) {
+                        final Course c4 = courseList.get(i4);
+                        submap3.put(c4, 0);
+                    }
+                }
+            }
+        }
+        
+        // Count the supports.
+        for (final Student student : studentMap.keySet()) {
+            final Set<Course> studentCourseSet = getStudentsAllCourses(student);
+            final List<Course> studentCourseList = 
+                    new ArrayList<>(studentCourseSet);
+            final int LIST_SIZE = studentCourseList.size();
+            
+            for (int i1 = 0; i1 < LIST_SIZE; ++i1) {
+                final Course c1 = studentCourseList.get(i1);
+                final Map<Course, Map<Course, Map<Course, Integer>>> submap = 
+                        map.get(c1);
+                
+                for (int i2 = i1 + 1; i2 < LIST_SIZE; ++i2) {
+                    final Course c2 = studentCourseList.get(i2);
+                    final Map<Course, Map<Course, Integer>> submap2 = 
+                            submap.get(c2);
+                    
+                    for (int i3 = i2 + 1; i3 < LIST_SIZE; ++i3) {
+                        final Course c3 = studentCourseList.get(i3);
+                        final Map<Course, Integer> submap3 = 
+                                submap2.get(c3);
+                        
+                        for (int i4 = i3 + 1; i4 < LIST_SIZE; ++i4) {
+                            final Course c4 = studentCourseList.get(i4);
+                            final int currentSupport = submap3.get(c4);
+                            submap3.put(c4, currentSupport + 1);
+                        }
+                    }
+                }
+            }
+        }
+        
+        return map;
     }
     
     public Map<Course, Map<Course, Map<Course, Integer>>> getSupportCube() {

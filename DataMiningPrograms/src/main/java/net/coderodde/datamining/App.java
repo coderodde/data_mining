@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Set;
 import net.coderodde.datamining.loader.support.DataLoaderv1;
 import net.coderodde.datamining.model.AppDataStorage;
@@ -70,14 +71,47 @@ public class App {
 //        app.printTwoCourseCombinationsWithSupportOver03();
         
         // Brute-force.
-        app.printTwoCourseCombinationsWithSupportOver03();
-        app.printThreeCourseCombinationsWithSupportOver0175();
+//        app.printTwoCourseCombinationsWithSupportOver03();
+//        app.printThreeCourseCombinationsWithSupportOver0175();
+//        app.printFourCourseCombinationsWithSupportOver01();
        
         // Apriori.
-        app.printTwoCourseCombinationsWithSupportOver03Apriori();
-        app.printThreeCourseCombinationsWithSupportOver0175Apriori();
+//        app.printTwoCourseCombinationsWithSupportOver03Apriori();
+//        app.printThreeCourseCombinationsWithSupportOver0175Apriori();
+//        app.printFourCourseCombinationsWithSupportOver01Apriori();
+//        app.printFiveCourseCombinationsWithSupportOver01Apriori();
+        
+//        app.interactiveSupportCounter();
+//        app.printLargestItemsetWithSupportOver005();
+        
+//        app.printTwoCourseCombinationsWithNonzeroSupport();
+//        app.printNewCourseGradePairs();
+        app.printCandidateSequences();
     }
 
+    private void interactiveSupportCounter() {
+        final Scanner scanner = new Scanner(System.in);
+        
+        for (;;) {
+            final String command = scanner.nextLine().trim();
+            
+            if (command.equals("quit")) {
+                return;
+            }
+            
+            final double support = Double.parseDouble(command);
+            final long ta = System.currentTimeMillis();
+            final Set<Set<Course>> frequentItemsets = appData.apriori(support);
+            final long tb = System.currentTimeMillis();
+            
+            for (final Set<Course> itemset : frequentItemsets) {
+                System.out.println(itemset);
+            }
+            
+            System.out.println("Time elapsed: " + (tb - ta) + " ms.");
+        }
+    }
+    
     private void printAllCourseCodes() {
         for (final Course course : appData.getCourseList()) {
             System.out.println(course.getCode());
@@ -654,6 +688,20 @@ public class App {
         
         System.out.println("Data:");
         System.out.println(sb.toString());
+        
+        final StringBuilder sb1 = new StringBuilder();
+        index = 0;
+        
+        for (final Student student : intersection) {
+            sb.append("{");
+            sb.append(appData.grade(student, basicCourse))
+              .append(", ")
+              .append(appData.grade(student, advancedCourse));
+            sb.append("},\n");
+        }
+        
+        System.out.println("Java-data:");
+        System.out.println(sb.toString());
     }
     
     /**
@@ -711,6 +759,20 @@ public class App {
         }
         
         System.out.println("Data:");
+        System.out.println(sb.toString());
+        
+        final StringBuilder sb1 = new StringBuilder();
+        index = 0;
+        
+        for (final Student student : intersection) {
+            sb.append("{");
+            sb.append(appData.grade(student, basicCourse))
+              .append(", ")
+              .append(appData.grade(student, advancedCourse));
+            sb.append("},\n");
+        }
+        
+        System.out.println("Java-data:");
         System.out.println(sb.toString());
     }
     
@@ -796,6 +858,82 @@ public class App {
                 outputList.size() + " in " + (tb - ta) + " ms.");
     }
     
+    private void printLargestItemsetWithSupportOver005() {
+        final long ta = System.currentTimeMillis();
+        final Set<Set<Course>> frequentItemsets = appData.apriori(0.05);
+        final long tb = System.currentTimeMillis();
+        
+        System.out.println("Found in " + (tb - ta) + " ms.");
+        
+        final List<Set<Course>> largestItemsets = new ArrayList<>();
+        int largestSize = 0;
+        
+        for (final Set<Course> itemset : frequentItemsets) {
+            if (largestSize < itemset.size()) {
+                largestSize = itemset.size();
+                largestItemsets.clear();
+                largestItemsets.add(itemset);
+            } else if (largestSize == itemset.size()) {
+                largestItemsets.add(itemset);
+            }
+        }
+        
+        for (final Set<Course> itemset : largestItemsets) {
+            System.out.println(itemset);
+        }
+        
+        System.out.println("Largest size: " + largestSize);
+    }
+    
+    private void printFourCourseCombinationsWithSupportOver01() {
+        final long ta = System.currentTimeMillis();
+        
+        final Map<Course, Map<Course, Map<Course, Map<Course, Integer>>>> map =
+                appData.getSupport4DMatrix();
+        
+        final List<Course> courseList = appData.getCourseList();
+        final int N = courseList.size();
+        final int ROWS = appData.getCourseAmount();
+        final List<List<Course>> outputList = new ArrayList<>();
+        
+        for (int i1 = 0; i1 < N; ++i1) {
+            final Course c1 = courseList.get(i1);
+            final Map<Course, Map<Course, Map<Course, Integer>>> submap 
+                    = map.get(c1);
+            
+            for (int i2 = i1 + 1; i2 < N; ++i2) {
+                final Course c2 = courseList.get(i2);
+                final Map<Course, Map<Course, Integer>> submap2 
+                        = submap.get(c2);
+                
+                for (int i3 = i2 + 1; i3 < N; ++i3) {
+                    final Course c3 = courseList.get(i3);
+                    final Map<Course, Integer> submap3 = submap2.get(c3);
+                    
+                    for (int i4 = i3 + 1; i4 < N; ++i4) {
+                        final Course c4 = courseList.get(i4);
+                        
+                        if ((1.0 * submap3.get(c4)) / ROWS > 0.1) {
+                            final List<Course> combination 
+                                    = new ArrayList<>(4);
+                            combination.add(c1);
+                            combination.add(c2);
+                            combination.add(c3);
+                            combination.add(c4);
+                            outputList.add(combination);
+                        }
+                    }
+                }
+            }
+        }
+        
+        final long tb = System.currentTimeMillis();
+        
+        System.out.println(
+                "4-combinations with support > 0.1: " + outputList.size() + 
+                " in " + (tb - ta) + " ms.");
+    }
+    
     private void printThreeCourseCombinationsWithSupportOver0175() {
         final long ta = System.currentTimeMillis();
         
@@ -806,7 +944,6 @@ public class App {
         final int N = courseList.size();
         final int ROWS = appData.getStudentAmount();
         final List<List<Course>> outputList = new ArrayList<>();
-        
         
         for (int index1 = 0; index1 < N; ++index1) {
             final Course a = courseList.get(index1);
@@ -835,6 +972,45 @@ public class App {
                 outputList.size() + " in " + (tb - ta) + " ms.");
     }
     
+    
+    private void printFiveCourseCombinationsWithSupportOver01Apriori() {
+        final long ta = System.currentTimeMillis();
+        final Set<Set<Course>> frequentItemsets = appData.apriori(0.1);
+        final List<List<Course>> outputList = new ArrayList<>();
+        
+        for (final Set<Course> itemset : frequentItemsets) {
+            if (itemset.size() == 5) {
+                outputList.add(new ArrayList<>(itemset));
+            }
+        }
+        
+        final long tb = System.currentTimeMillis();
+        
+        System.out.println("Total frequent itemsets with support > 0.1: " +
+                           frequentItemsets.size());
+        System.out.println("Found " + outputList.size() + " 5-combinations " +
+                           "in " + (tb - ta) + " ms.");
+    }
+    
+    private void printFourCourseCombinationsWithSupportOver01Apriori() {
+        final long ta = System.currentTimeMillis();
+        final Set<Set<Course>> frequentItemsets = appData.apriori(0.1);
+        final List<List<Course>> outputList = new ArrayList<>();
+        
+        for (final Set<Course> itemset : frequentItemsets) {
+            if (itemset.size() == 4) {
+                outputList.add(new ArrayList<>(itemset));
+            }
+        }
+        
+        final long tb = System.currentTimeMillis();
+        
+        System.out.println("Total frequent itemsets with support > 0.1: " +
+                           frequentItemsets.size());
+        System.out.println("Found " + outputList.size() + " 4-combinations " +
+                           "in " + (tb - ta) + " ms.");
+    }
+    
     private void printThreeCourseCombinationsWithSupportOver0175Apriori() {
         final long ta = System.currentTimeMillis();
         final Set<Set<Course>> frequentItemsets = appData.apriori(0.175);
@@ -851,5 +1027,200 @@ public class App {
                            frequentItemsets.size());
         System.out.println("Found " + outputList.size() + " 3-combinations " +
                            "in " + (tb - ta) + " ms.");
+    }
+    
+    private void printCandidateSequences() {
+        final Sequence s1 = new Sequence("B,C,H");
+        final Sequence s2 = new Sequence("B|P,C");
+        final Sequence s3 = new Sequence("C,H,P");
+        final Sequence s4 = new Sequence("P,C|H");
+        final Sequence s5 = new Sequence("T,B,C");
+        final Sequence s6 = new Sequence("T,B|P");
+        final Sequence s7 = new Sequence("T,P,C");
+        
+        final List<Sequence> sequenceList = new ArrayList<>();
+        
+        sequenceList.add(s1);
+        sequenceList.add(s2);
+        sequenceList.add(s3);
+        sequenceList.add(s4);
+        sequenceList.add(s5);
+        sequenceList.add(s6);
+        sequenceList.add(s7);
+        
+        final Sequence ss1 = new Sequence("A|B,C");
+        final Sequence ss2 = new Sequence("A,B|C");
+        
+        System.out.println("ss1 = ss2: " + ss1.equals(ss2));
+        
+        final Sequence ss3 = new Sequence("C,D|B,F,E");
+        
+        System.out.println(ss3);
+        System.out.println(ss3.dropFirstEvent());
+        System.out.println(ss3.dropLastEvent());
+    }
+    
+    static List<Sequence> generateSequenceCandidates(final List<Sequence> input) {
+        return null;
+    }
+    
+    static class Sequence implements Iterable<String> {
+        
+        private final List<List<String>> sequence;
+        
+        Sequence(final String code) {
+            final String[] elements = code.split(",");
+            this.sequence = new ArrayList<>(elements.length);
+            
+            for (final String element : elements) {
+                final String[] events = element.split("\\|");
+                final ArrayList<String> eventList = 
+                        new ArrayList<>(events.length);
+                
+                for (final String event : events) {
+                    eventList.add(event);
+                }
+                
+                Collections.<String>sort(eventList);
+                this.sequence.add(eventList);
+            }
+        }
+        
+        private Sequence(final List<List<String>> sequence) {
+            this.sequence = new ArrayList<>(sequence.size());
+            
+            for (final List<String> element : sequence) {
+                this.sequence.add(element);
+            }
+        }
+        
+        Sequence dropFirstEvent() {
+            final List<List<String>> newSequence = 
+                    new ArrayList<>(sequence.size());
+            
+            for (final List<String> element : sequence) {
+                newSequence.add(new ArrayList<>(element));
+            }
+            
+            newSequence.get(0).remove(0);
+            
+            if (newSequence.get(0).isEmpty()) {
+                newSequence.remove(0);
+            }
+            
+            return new Sequence(newSequence);
+        }
+        
+        Sequence dropLastEvent() {
+            final List<List<String>> newSequence = 
+                    new ArrayList<>(sequence.size());
+            
+            for (final List<String> element : sequence) {
+                newSequence.add(new ArrayList<>(element));
+            }
+            
+            final List<String> lastElement = 
+                    newSequence.get(newSequence.size() - 1);
+            
+            lastElement.remove(lastElement.size() - 1);
+            
+            if (lastElement.isEmpty()) {
+                newSequence.remove(newSequence.size() - 1);
+            }
+            
+            return new Sequence(newSequence);
+        }
+        
+        public boolean equals(final Object o) {
+            if (!(o instanceof Sequence)) {
+                return false;
+            }
+            
+            final Sequence other = (Sequence) o;
+            final Iterator<String> iter1 = iterator();
+            final Iterator<String> iter2 = other.iterator();
+            
+            while (iter1.hasNext()) {
+                if (!iter2.hasNext()) {
+                    return false;
+                }
+                
+                if (!iter1.next().equals(iter2.next())) {
+                    return false;
+                }
+            }
+            
+            return !iter2.hasNext();
+        }
+        
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder();
+            final int elementAmount = sequence.size();
+            
+            for (int i = 0; i < elementAmount; ++i) {
+                sb.append('{');
+                
+                final List<String> eventList = sequence.get(i);
+                final int eventAmount = eventList.size();
+                
+                for (int j = 0; j < eventAmount; ++j) {
+                    sb.append(eventList.get(j));
+                    
+                    if (j < eventAmount - 1) {
+                        sb.append(',');
+                    }
+                }
+                
+                sb.append('}');
+                
+                if (i < elementAmount - 1) {
+                    sb.append(',');
+                }
+            }
+            
+            return sb.toString();
+        }
+
+        @Override
+        public Iterator<String> iterator() {
+            return new SequenceIterator();
+        }
+        
+        private class SequenceIterator implements Iterator<String> {
+            
+            private int globalIndex;
+            private int localIndex;
+            private int left;
+            
+            SequenceIterator() {
+                this.left = 0;
+                
+                for (final List<String> element : Sequence.this.sequence) {
+                    left += element.size();
+                }
+            }
+
+            @Override
+            public boolean hasNext() {
+                return left > 0;
+            }
+
+            @Override
+            public String next() {
+                final List<String> element = 
+                        Sequence.this.sequence.get(globalIndex);
+                
+                final String ret = element.get(localIndex++);
+                
+                if (element.size() == localIndex) {
+                    localIndex = 0;
+                    ++globalIndex;
+                }
+                
+                --left;
+                return ret;
+            }
+        }
     }
 }
