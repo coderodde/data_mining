@@ -1048,23 +1048,72 @@ public class App {
         sequenceList.add(s6);
         sequenceList.add(s7);
         
-        final Sequence ss1 = new Sequence("A|B,C");
-        final Sequence ss2 = new Sequence("A,B|C");
+        final List<Sequence> outputList = 
+                generateSequenceCandidates(sequenceList);
         
-        System.out.println("ss1 = ss2: " + ss1.equals(ss2));
+        for (final Sequence sequence : outputList) {
+            System.out.println(sequence);
+        }
         
-        final Sequence ss3 = new Sequence("C,D|B,F,E");
-        
-        System.out.println(ss3);
-        System.out.println(ss3.dropFirstEvent());
-        System.out.println(ss3.dropLastEvent());
+//        final Sequence ss1 = new Sequence("A|B,C");
+//        final Sequence ss2 = new Sequence("A,B|C");
+//        
+//        System.out.println("ss1 = ss2: " + ss1.equals(ss2));
+//        
+//        final Sequence ss3 = new Sequence("C,D|B,F,E");
+//        
+//        System.out.println(ss3);
+//        System.out.println(ss3.dropFirstEvent());
+//        System.out.println(ss3.dropLastEvent());
     }
     
-    static List<Sequence> generateSequenceCandidates(final List<Sequence> input) {
-        return null;
+    static List<Sequence> 
+        generateSequenceCandidates(final List<Sequence> input) {
+        final List<Sequence> outputList = new ArrayList<>();
+        final int inputSequenceAmount = input.size();
+        
+        for (int i1 = 0; i1 < inputSequenceAmount; ++i1) {
+            final Sequence s1 = input.get(i1);
+            final Sequence s1aux = s1.dropFirstEvent();
+            
+            for (int i2 = 0; i2 < inputSequenceAmount; ++i2) {
+                if (i1 == i2) {
+                    continue;
+                }
+                
+                final Sequence s2 = input.get(i2);
+                final Sequence s2aux = s2.dropLastEvent();
+                
+                if (s1aux.equals(s2aux)) {
+                    outputList.add(mergeSequences(s1, s2));
+                }
+            }
+        }
+        
+        System.out.println("Done!");
+        return outputList;
+    }
+        
+    static Sequence mergeSequences(final Sequence s1, final Sequence s2) {
+        final String lastEvent = s2.getLastEvent();
+        
+        switch (s2.getMergeType()) {
+            case Sequence.SEPARATE:
+                return new Sequence(s1, lastEvent, false);
+                
+            case Sequence.TOGETHER:
+                return new Sequence(s1, lastEvent, true);
+                
+            default:
+                throw new IllegalStateException(
+                        "Unknown merge type: " + s2.getMergeType());
+        }
     }
     
-    static class Sequence implements Iterable<String> {
+    static class Sequence implements Iterable<String>, Comparable<Sequence> {
+        
+        public static final int SEPARATE = 1;
+        public static final int TOGETHER = 2;
         
         private final List<List<String>> sequence;
         
@@ -1086,11 +1135,31 @@ public class App {
             }
         }
         
+        Sequence(final Sequence s, final String event, final boolean doMerge) {
+            this.sequence = new ArrayList<>(s.sequence.size() + 1);
+            
+            for (final List<String> element : s.sequence) {
+                this.sequence.add(new ArrayList<>(element));
+            }
+            
+            if (doMerge) {
+                final int elements = this.sequence.size();
+                final List<String> lastElement = 
+                        this.sequence.get(elements - 1);
+                lastElement.add(event);
+                Collections.<String>sort(lastElement);
+            } else {
+                final List<String> lastElement = new ArrayList<>(1);
+                lastElement.add(event);
+                this.sequence.add(lastElement);
+            }
+        }
+        
         private Sequence(final List<List<String>> sequence) {
             this.sequence = new ArrayList<>(sequence.size());
             
             for (final List<String> element : sequence) {
-                this.sequence.add(element);
+                this.sequence.add(new ArrayList<>(element));
             }
         }
         
@@ -1129,6 +1198,16 @@ public class App {
             }
             
             return new Sequence(newSequence);
+        }
+        
+        String getLastEvent() {
+            final List<String> lastElement = sequence.get(sequence.size() - 1);
+            return lastElement.get(lastElement.size() - 1);
+        }
+        
+        int getMergeType() {
+            final List<String> lastElement = sequence.get(sequence.size() - 1);
+            return lastElement.size() > 1 ? TOGETHER : SEPARATE;
         }
         
         public boolean equals(final Object o) {
@@ -1185,6 +1264,29 @@ public class App {
         @Override
         public Iterator<String> iterator() {
             return new SequenceIterator();
+        }
+
+        @Override
+        public int compareTo(Sequence o) {
+            final Iterator<String> iter1 = iterator();
+            final Iterator<String> iter2 = o.iterator();
+            
+            while (iter1.hasNext()) {
+                if (!iter2.hasNext()) {
+                    return 1;
+                }
+                
+                final String s1 = iter1.next();
+                final String s2 = iter2.next();
+                
+                if (s1.equals(s2)) {
+                    continue;
+                }
+                
+                return s1.compareTo(s2);
+            }
+            
+            return iter2.hasNext() ? -1 : 0;
         }
         
         private class SequenceIterator implements Iterator<String> {
