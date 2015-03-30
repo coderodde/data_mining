@@ -1055,16 +1055,16 @@ public class App {
             System.out.println(sequence);
         }
         
-//        final Sequence ss1 = new Sequence("A|B,C");
-//        final Sequence ss2 = new Sequence("A,B|C");
-//        
-//        System.out.println("ss1 = ss2: " + ss1.equals(ss2));
-//        
-//        final Sequence ss3 = new Sequence("C,D|B,F,E");
-//        
-//        System.out.println(ss3);
-//        System.out.println(ss3.dropFirstEvent());
-//        System.out.println(ss3.dropLastEvent());
+        final Sequence ss1 = new Sequence("A|B,C");
+        final Sequence ss2 = new Sequence("A,B|C");
+        
+        System.out.println("ss1 = ss2: " + ss1.equals(ss2));
+        
+        final Sequence ss3 = new Sequence("C,D|B,F,E");
+        
+        System.out.println(ss3);
+        System.out.println(ss3.dropFirstEvent());
+        System.out.println(ss3.dropLastEvent());
     }
     
     static List<Sequence> 

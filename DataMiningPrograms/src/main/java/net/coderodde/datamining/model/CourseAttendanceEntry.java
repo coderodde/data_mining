@@ -10,7 +10,8 @@ import static net.coderodde.datamining.utils.ValidationUtilities.checkNotNull;
  * @author Rodion Efremov
  * @version 1.6
  */
-public class CourseAttendanceEntry {
+public class CourseAttendanceEntry 
+implements Comparable<CourseAttendanceEntry>{
     
     /**
      * The student of this attendance entry.
@@ -118,6 +119,30 @@ public class CourseAttendanceEntry {
     
     public static StudentSelector createAttendanceEntry() {
         return new StudentSelector();
+    }
+
+    @Override
+    public int compareTo(final CourseAttendanceEntry other) {
+        if (getYear() < other.getYear()) {
+            return -1;
+        }
+        
+        if (getYear() > other.getYear()) {
+            return 1;
+        }
+        
+        // Once here, both have the same year.
+        if (getMonth() < other.getMonth()) {
+            return -1;
+        }
+        
+        if (getMonth() > other.getMonth()) {
+            return 1;
+        }
+        
+        // Once here, both have the same month as well. Sort by the course 
+        // names.
+        return getCourse().getName().compareTo(other.getCourse().getName());
     }
     
     public static final class StudentSelector {
