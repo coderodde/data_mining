@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javafx.collections.MapChangeListener;
+import net.coderodde.datamining.App;
 import static net.coderodde.datamining.model.Course.COURSE_FAILED_GRADE;
 import static net.coderodde.datamining.utils.Utils.containsAll;
 import static net.coderodde.datamining.utils.Utils.intersect;
@@ -578,19 +578,57 @@ public class AppDataStorage {
         final Map<Sequence, Integer> sigma = new HashMap<>();
         final Map<Integer, List<Sequence>> map = new HashMap<>();
         
+        //// BEGIN: Work structures.
+        final List<List<Course>> workList = new ArrayList<>();
+        final List<Course> elementList = new ArrayList<>();
+        workList.add(elementList);
+        //// END: Work structures.
+        
         map.put(1, new ArrayList<Sequence>());
         
-        for (final Course course : getCourseList()) {
-            
+        // In the first iteration, find out all frequent 1-sequences.
+        for (final Course course : courseList) {
             final int supportCount = supportCount(course);
             final double support = 1.0 * supportCount / studentMap.size();
             
             if (support >= minSupport) {
-//                final Sequence sequence = new Sequence(null);
+                elementList.clear();
+                elementList.add(course);
+                
+                final Sequence sequence = new Sequence(workList);
+                
+                map.get(1).add(sequence);
+                sigma.put(sequence, supportCount);
             }
         }
         
-        throw new NullPointerException();
+        int k = 1;
+        
+        do {
+            ++k;
+            
+            final List<Sequence> candidateList = 
+                    generateSequenceCandidates(map.get(k - 1));
+            
+            for (final Student student : studentMap.keySet()) {
+                final Sequence transaction 
+                        = getStudentCoursesAsSequence(student);
+                final List<Sequence> candidateList2 = subsequence(candidateList,
+                                                                  transaction);
+                
+                for (final Sequence sequence : candidateList2) {
+                    if (!sigma.containsKey(sequence)) {
+                        sigma.put(sequence, 1);
+                    } else {
+                        sigma.put(sequence, sigma.get(sequence) + 1);
+                    }
+                }
+            }
+            
+            map.put(k, getNextSequences(candidateList, sigma, minSupport));
+        } while (map.get(k).size() > 0);
+        
+        return extractSequences(map);
     }
     
     public Set<Set<Course>> apriori(final double minSupport) {
@@ -733,6 +771,17 @@ public class AppDataStorage {
         
         return ret;
     }
+        
+    private List<Sequence> 
+        extractSequences(final Map<Integer, List<Sequence>> map) {
+        final List<Sequence> ret = new ArrayList<>();
+        
+        for (final List<Sequence> sequences : map.values()) {
+            ret.addAll(sequences);
+        }
+        
+        return ret;
+    }
 
     /**
      * Returns all those itemsest from <code>set</code> that are contained by
@@ -830,6 +879,42 @@ public class AppDataStorage {
         
         return ret;
     }
+
+    private List<Sequence> 
+        getNextSequences(final List<Sequence> candidateList, 
+                         final Map<Sequence, Integer> sigma, 
+                         final double minSupport) {
+        final List<Sequence> ret = new ArrayList<>(candidateList.size());
+        
+        for (final Sequence sequence : candidateList) {
+            if (sigma.get(sequence) != null
+                    && 1.0 * sigma.get(sequence) 
+                           / studentMap.keySet().size() >= minSupport) {
+                ret.add(sequence);
+            }
+        }
+        
+        return ret;
+    }
+
+    private Sequence getStudentCoursesAsSequence(final Student student) {
+        final List<Course> courseList = studentToCourseListMap.get(student);
+        
+        return null;
+    }
+
+    private List<Sequence> subsequence(final List<Sequence> candidateList, 
+                                       final Sequence transaction) {
+        final List<Sequence> ret = new ArrayList<>(candidateList.size());
+        
+        for (final Sequence sequence : candidateList) {
+            if (sequence.isContainedIn(transaction)) {
+                ret.add(sequence);
+            }
+        }
+        
+        return ret;
+    }
         
     /**
      * Sorts the courses such that those courses that had been done earlier end
@@ -866,6 +951,48 @@ public class AppDataStorage {
             }
             
             return mostRecent;
+        }
+    }
+    
+    private List<Sequence> 
+        generateSequenceCandidates(final List<Sequence> input) {
+        final List<Sequence> outputList = new ArrayList<>();
+        final int inputSequenceAmount = input.size();
+        
+        for (int i1 = 0; i1 < inputSequenceAmount; ++i1) {
+            final Sequence s1 = input.get(i1);
+            final Sequence s1aux = s1.dropFirstEvent();
+            
+            for (int i2 = 0; i2 < inputSequenceAmount; ++i2) {
+                if (i1 == i2) {
+                    continue;
+                }
+                
+                final Sequence s2 = input.get(i2);
+                final Sequence s2aux = s2.dropLastEvent();
+                
+                if (s1aux.equals(s2aux)) {
+                    outputList.add(mergeSequences(s1, s2));
+                }
+            }
+        }
+        
+        return outputList;
+    }
+      
+    private Sequence mergeSequences(final Sequence s1, final Sequence s2) {
+        final Course lastEvent = s2.getLastEvent();
+        
+        switch (s2.getMergeType()) {
+            case Sequence.SEPARATE:
+                return new Sequence(s1, lastEvent, false);
+                
+            case Sequence.TOGETHER:
+                return new Sequence(s1, lastEvent, true);
+                
+            default:
+                throw new IllegalStateException(
+                        "Unknown merge type: " + s2.getMergeType());
         }
     }
 }

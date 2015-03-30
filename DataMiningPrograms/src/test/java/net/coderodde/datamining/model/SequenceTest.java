@@ -380,6 +380,34 @@ public class SequenceTest {
 
     @Test
     public void testCompareTo() {
+        Sequence s1 = createSequence(course1, null, course3);
+        Sequence s2 = createSequence(course1, course3);
         
+        assertEquals(0, s1.compareTo(s2));
+        assertEquals(0, s2.compareTo(s1));
+        
+        s2 = createSequence(course1, course3, null, course4);
+        
+        assertEquals(-1, s1.compareTo(s2));
+        assertEquals(1, s2.compareTo(s1));
+    }
+    
+    public static final Sequence createSequence(final Course... courses) {
+        final List<List<Course>> list = new ArrayList<>();
+        
+        List<Course> currentElement = new ArrayList<>();
+        
+        for (int i = 0; i < courses.length; ++i) {
+            if (courses[i] == null) {
+                if (!currentElement.isEmpty()) {
+                    list.add(currentElement);
+                    currentElement = new ArrayList<>();
+                }
+            } else {
+                currentElement.add(courses[i]);
+            }
+        }
+        
+        return new Sequence(list);
     }
 }
