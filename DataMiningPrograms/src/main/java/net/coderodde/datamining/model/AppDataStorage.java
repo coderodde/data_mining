@@ -2,11 +2,13 @@ package net.coderodde.datamining.model;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javafx.collections.MapChangeListener;
 import static net.coderodde.datamining.model.Course.COURSE_FAILED_GRADE;
 import static net.coderodde.datamining.utils.Utils.containsAll;
 import static net.coderodde.datamining.utils.Utils.intersect;
@@ -26,6 +28,11 @@ public class AppDataStorage {
      * that student.
      */
     private final Map<Student, List<CourseAttendanceEntry>> studentMap;
+    
+    /**
+     * This maps each student to the list of courses of that student.
+     */
+    private final Map<Student, List<Course>> studentToCourseListMap;
     
     /**
      * This map maps each course to the list of course attendance entries of
@@ -66,6 +73,7 @@ public class AppDataStorage {
         this.courseList = Collections.<Course>unmodifiableList(courseList);
         this.mapNameToCourse = new HashMap<>(courseList.size());
         this.matrix = new HashMap<>(studentList.size());
+        this.studentToCourseListMap = new HashMap<>(studentList.size());
         
         for (final CourseAttendanceEntry entry : entryList) {
             final Student student = entry.getStudent();
@@ -112,6 +120,21 @@ public class AppDataStorage {
         }
         
         Collections.sort(courseList);
+        
+        for (final Student student : studentList) {
+            final List<Course> sortedCourseList = new ArrayList<>();
+            final Set<Course> courseSet = new HashSet<>();
+            
+            for (final CourseAttendanceEntry entry : studentMap.get(student)) {
+                courseSet.add(entry.getCourse());
+            }
+            
+            sortedCourseList.addAll(courseSet);
+            Collections.sort(sortedCourseList, 
+                             new CourseComparatorByEntries(courseMap));
+            
+            studentToCourseListMap.put(student, courseList);
+        }
     }
     
     public List<Student> getStudentsFrom(final Course course,
@@ -557,8 +580,6 @@ public class AppDataStorage {
         
         map.put(1, new ArrayList<Sequence>());
         
-        
-        
         for (final Course course : getCourseList()) {
             
             final int supportCount = supportCount(course);
@@ -808,5 +829,43 @@ public class AppDataStorage {
         }
         
         return ret;
+    }
+        
+    /**
+     * Sorts the courses such that those courses that had been done earlier end
+     * up in the beginning of the list.
+     */
+    private static final class CourseComparatorByEntries 
+    implements Comparator<Course> {
+
+        private final Map<Course, List<CourseAttendanceEntry>> map;
+        
+        CourseComparatorByEntries(
+                final Map<Course, List<CourseAttendanceEntry>> map) {
+            this.map = map;
+        }
+        
+        @Override
+        public int compare(final Course c1, final Course c2) {
+            final CourseAttendanceEntry e1 = findMostRecentEntry(c1);
+            final CourseAttendanceEntry e2 = findMostRecentEntry(c2);
+            return e1.isEarlierThan(e2) ? -1 : 1;
+        }
+        
+        private CourseAttendanceEntry findMostRecentEntry(final Course course) {
+            final List<CourseAttendanceEntry> entryList = map.get(course);
+            
+            CourseAttendanceEntry mostRecent = entryList.get(0);
+            
+            for (int i = 1; i < entryList.size(); ++i) {
+                final CourseAttendanceEntry current = entryList.get(i);
+                
+                if (mostRecent.isEarlierThan(current)) {
+                    mostRecent = current;
+                }
+            }
+            
+            return mostRecent;
+        }
     }
 }

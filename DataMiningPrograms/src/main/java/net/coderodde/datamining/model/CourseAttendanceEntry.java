@@ -96,6 +96,22 @@ implements Comparable<CourseAttendanceEntry>{
         return grade;
     }
     
+    public boolean isEarlierThan(final CourseAttendanceEntry other) {
+        if (getYear() < other.getYear()) {
+            return true;
+        }
+        
+        if (getYear() > other.getYear()) {
+            return false;
+        }
+        
+        if (getMonth() < other.getMonth()) {
+            return true;
+        }
+        
+        return false;
+    }
+    
     @Override
     public boolean equals(final Object obj) {
         if (!(obj instanceof CourseAttendanceEntry)) {

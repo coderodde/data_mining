@@ -26,7 +26,9 @@ implements Iterable<Course>, Comparable<Sequence> {
             this.sequence = new ArrayList<>(sequence.size());
             
             for (final List<Course> element : sequence) {
-                this.sequence.add(new ArrayList<>(element));
+                final List<Course> localElement = new ArrayList<>(element);
+                this.sequence.add(localElement);
+                Collections.sort(localElement);
             }
         }
         
@@ -111,6 +113,36 @@ implements Iterable<Course>, Comparable<Sequence> {
         public int getMergeType() {
             final List<Course> lastElement = sequence.get(sequence.size() - 1);
             return lastElement.size() > 1 ? TOGETHER : SEPARATE;
+        }
+        
+        public boolean isContainedIn(final Sequence s) {
+            if (this.sequence.size() > s.sequence.size()) {
+                // Containment not possible.
+                return false;
+            }
+            
+            int matches = 0;
+            int passed = 0;
+            
+            outer:
+            for (int i1 = 0; i1 < this.sequence.size(); ++i1) {
+                final List<Course> element = this.sequence.get(i1);
+                
+                while (passed < s.sequence.size()) {
+                    if (s.sequence.get(passed).containsAll(element)) {
+                        if (++matches == this.sequence.size()) {
+                            return true;
+                        }
+                        
+                        ++passed;
+                        continue outer;
+                    }
+                    
+                    ++passed;
+                }
+            }
+            
+            return false;
         }
         
         @Override
