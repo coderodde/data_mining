@@ -89,7 +89,12 @@ public class App {
 //        app.printNewCourseGradePairs();
 //        app.printCandidateSequences();
         
-        app.printWeek3Task16();
+         ////////////////
+        //// WEEK 3 ////
+       ////////////////
+        
+//        app.printWeek3Task16();
+        app.printWeek3Task17();
     }
 
     private void interactiveSupportCounter() {
@@ -1083,6 +1088,25 @@ public class App {
         final List<SequenceAndSupport> list = choose(result, 2);
         
         System.out.println("Five hottest 2-sequences: ");
+        
+        for (int i = list.size() - 1, c = 0; i >= 0 && c < 5; --i, ++c) {
+            System.out.println(list.get(i));
+        }
+    }
+    
+    private void printWeek3Task17() {
+        final long ta = System.currentTimeMillis();
+        
+        final List<SequenceAndSupport> result = 
+                appData.sequentialApriori(0.2, 5);
+        
+        final long tb = System.currentTimeMillis();
+        
+        System.out.println("Time elapsed: " + (tb - ta) + " ms.");
+        
+        final List<SequenceAndSupport> list = choose(result, 2);
+        
+        System.out.println("Five hottest 5-sequences: ");
         
         for (int i = list.size() - 1, c = 0; i >= 0 && c < 5; --i, ++c) {
             System.out.println(list.get(i));
