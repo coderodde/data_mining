@@ -130,8 +130,8 @@ public class AppDataStorage {
             }
             
             sortedCourseList.addAll(courseSet);
-            Collections.sort(sortedCourseList, 
-                             new CourseComparatorByEntries(courseMap));
+//            Collections.sort(sortedCourseList, 
+//                             new CourseComparatorByEntries(courseMap));
             
             studentToCourseListMap.put(student, courseList);
         }
@@ -574,7 +574,125 @@ public class AppDataStorage {
         return 1.0 * count / getStudentAmount();
     }
     
-    public List<Sequence> sequentialApriori(final double minSupport) {
+    public static class SequenceAndSupport 
+    implements Comparable<SequenceAndSupport>{
+        
+        private final Sequence sequence;
+        private final double support;
+        
+        public SequenceAndSupport(final Sequence sequence, 
+                                  final double support) {
+            this.sequence = sequence;
+            this.support = support;
+        }
+        
+        public Sequence getSequence() {
+            return sequence;
+        }
+        
+        public double getSupport() {
+            return support;
+        }
+
+        @Override
+        public int compareTo(SequenceAndSupport o) {
+            return Double.compare(support, o.support);
+        }
+        
+        @Override
+        public String toString() {
+            return "[[" + sequence + ": " + support + "]]";
+        }
+    }
+    
+    public List<SequenceAndSupport> 
+        sequentialApriori(final double minSupport,
+                          final int size) {
+        final Map<Sequence, Double> seqToSupportMap = new HashMap<>();
+        final Map<Sequence, Integer> sigma = new HashMap<>();
+        final Map<Integer, List<Sequence>> map = new HashMap<>();
+        
+        //// BEGIN: Work structures.
+        final List<List<Course>> workList = new ArrayList<>();
+        final List<Course> elementList = new ArrayList<>();
+        workList.add(elementList);
+        //// END: Work structures.
+        
+        final int ROWS = studentMap.size();
+        
+        map.put(1, new ArrayList<Sequence>());
+        
+        // In the first iteration, find out all frequent 1-sequences.
+        for (final Course course : courseList) {
+            final int supportCount = supportCount(course);
+            final double support = 1.0 * supportCount / studentMap.size();
+            
+            if (support >= minSupport) {
+                elementList.clear();
+                elementList.add(course);
+                
+                final Sequence sequence = new Sequence(workList);
+                
+                map.get(1).add(sequence);
+                sigma.put(sequence, supportCount);
+                
+                seqToSupportMap.put(sequence, support);
+            }
+        }
+        
+        if (size <= 1) {
+            final List<SequenceAndSupport> ret = 
+                    extractSequences(map, seqToSupportMap);
+
+            Collections.sort(ret);
+
+            return ret;
+        }
+        
+        System.out.println("First step done!");
+        
+        int k = 1;
+        
+        do {
+            ++k;
+            
+            System.out.println("Doing k = " + k);
+            
+            final List<Sequence> candidateList = 
+                    generateSequenceCandidates(map.get(k - 1));
+            
+            for (final Student student : studentMap.keySet()) {
+                final Sequence transaction 
+                        = getStudentCoursesAsSequence(student);
+                final List<Sequence> candidateList2 = subsequence(candidateList,
+                                                                  transaction);
+                
+                for (final Sequence sequence : candidateList2) {
+                    if (!sigma.containsKey(sequence)) {
+                        sigma.put(sequence, 1);
+                        seqToSupportMap.put(sequence, 1.0 / ROWS);
+                    } else {
+                        final int newSupportCount = sigma.get(sequence) + 1;
+                        sigma.put(sequence, newSupportCount);
+                        seqToSupportMap.put(sequence, 
+                                            1.0 * newSupportCount / ROWS);
+                    }
+                }
+            }
+            
+            map.put(k, getNextSequences(candidateList, sigma, minSupport));
+        } while (k < size && map.get(k).size() > 0);
+        
+        final List<SequenceAndSupport> ret = 
+                extractSequences(map, seqToSupportMap);
+        
+        Collections.sort(ret);
+        
+        return ret;
+    }
+    
+    public List<SequenceAndSupport> sequentialApriori(final double minSupport) {
+        final Map<Sequence, Double> seqToSupportMap = new HashMap<>();
         final Map<Sequence, Integer> sigma = new HashMap<>();
         final Map<Integer, List<Sequence>> map = new HashMap<>();
         
@@ -599,6 +717,8 @@ public class AppDataStorage {
                 
                 map.get(1).add(sequence);
                 sigma.put(sequence, supportCount);
+                
+                seqToSupportMap.put(sequence, support);
             }
         }
         
@@ -628,7 +748,12 @@ public class AppDataStorage {
             map.put(k, getNextSequences(candidateList, sigma, minSupport));
         } while (map.get(k).size() > 0);
         
-        return extractSequences(map);
+        final List<SequenceAndSupport> ret = 
+                extractSequences(map, seqToSupportMap);
+        
+        Collections.sort(ret);
+        
+        return ret;
     }
     
     public Set<Set<Course>> apriori(final double minSupport) {
@@ -772,12 +897,16 @@ public class AppDataStorage {
         return ret;
     }
         
-    private List<Sequence> 
-        extractSequences(final Map<Integer, List<Sequence>> map) {
-        final List<Sequence> ret = new ArrayList<>();
+    private List<SequenceAndSupport> 
+        extractSequences(final Map<Integer, List<Sequence>> map,
+                         final Map<Sequence, Double> seqToSupportMap) {
+        final List<SequenceAndSupport> ret = new ArrayList<>();
         
         for (final List<Sequence> sequences : map.values()) {
-            ret.addAll(sequences);
+            for (final Sequence sequence : sequences) {
+                ret.add(new SequenceAndSupport(sequence,
+                                               seqToSupportMap.get(sequence)));
+            }
         }
         
         return ret;
@@ -898,9 +1027,34 @@ public class AppDataStorage {
     }
 
     private Sequence getStudentCoursesAsSequence(final Student student) {
-        final List<Course> courseList = studentToCourseListMap.get(student);
+        final List<CourseAttendanceEntry> entryList = studentMap.get(student);
+        final List<List<Course>> mainList = new ArrayList<>();
         
-        return null;
+        Collections.<CourseAttendanceEntry>sort(entryList);
+        
+        int year = entryList.get(0).getYear();
+        int month = entryList.get(0).getMonth();
+        
+        List<Course> workList = new ArrayList<>();
+        workList.add(entryList.get(0).getCourse());
+        
+        for (int i = 1; i < entryList.size(); ++i) {
+            final CourseAttendanceEntry currentEntry = entryList.get(i);
+            
+            if (currentEntry.getMonth() == month 
+                    && currentEntry.getYear() == year) {
+                workList.add(currentEntry.getCourse());
+            } else {
+                mainList.add(workList);
+                workList = new ArrayList<>();
+                workList.add(currentEntry.getCourse());
+                
+                year = currentEntry.getYear();
+                month = currentEntry.getMonth();
+            }
+        }
+        
+        return new Sequence(mainList);
     }
 
     private List<Sequence> subsequence(final List<Sequence> candidateList, 

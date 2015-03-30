@@ -105,6 +105,21 @@ implements Iterable<Course>, Comparable<Sequence> {
             return new Sequence(newSequence);
         }
         
+        /**
+         * Returns the amount of events in this sequence.
+         * 
+         * @return the amount of events in this sequence.
+         */
+        public int size() {
+            int size = 0;
+            
+            for (final List<Course> element : sequence) {
+                size += element.size();
+            }
+            
+            return size;
+        }
+        
         public Course getLastEvent() {
             final List<Course> lastElement = sequence.get(sequence.size() - 1);
             return lastElement.get(lastElement.size() - 1);

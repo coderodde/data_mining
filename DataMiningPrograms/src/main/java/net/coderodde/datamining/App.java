@@ -13,6 +13,7 @@ import java.util.Scanner;
 import java.util.Set;
 import net.coderodde.datamining.loader.support.DataLoaderv1;
 import net.coderodde.datamining.model.AppDataStorage;
+import net.coderodde.datamining.model.AppDataStorage.SequenceAndSupport;
 import net.coderodde.datamining.model.Course;
 import net.coderodde.datamining.model.Student;
 import static net.coderodde.datamining.utils.Utils.intersect;
@@ -86,7 +87,9 @@ public class App {
         
 //        app.printTwoCourseCombinationsWithNonzeroSupport();
 //        app.printNewCourseGradePairs();
-        app.printCandidateSequences();
+//        app.printCandidateSequences();
+        
+        app.printWeek3Task16();
     }
 
     private void interactiveSupportCounter() {
@@ -1067,6 +1070,25 @@ public class App {
         System.out.println(ss3.dropLastEvent());
     }
     
+    private void printWeek3Task16() {
+        final long ta = System.currentTimeMillis();
+        
+        final List<SequenceAndSupport> result = 
+                appData.sequentialApriori(0.0, 2);
+        
+        final long tb = System.currentTimeMillis();
+        
+        System.out.println("Time elapsed: " + (tb - ta) + " ms.");
+        
+        final List<SequenceAndSupport> list = choose(result, 2);
+        
+        System.out.println("Five hottest 2-sequences: ");
+        
+        for (int i = list.size() - 1, c = 0; i >= 0 && c < 5; --i, ++c) {
+            System.out.println(list.get(i));
+        }
+    }
+    
     static List<Sequence> 
         generateSequenceCandidates(final List<Sequence> input) {
         final List<Sequence> outputList = new ArrayList<>();
@@ -1324,5 +1346,19 @@ public class App {
                 return ret;
             }
         }
+    }
+    
+    private static 
+        List<SequenceAndSupport> choose(final List<SequenceAndSupport> list,
+                                        final int size) {
+        final List<SequenceAndSupport> ret = new ArrayList<>(list.size());
+        
+        for (final SequenceAndSupport entry : list) {
+            if (entry.getSequence().size() == size) {
+                ret.add(entry);
+            }
+        }
+        
+        return ret;
     }
 }
