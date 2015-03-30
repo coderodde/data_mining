@@ -551,6 +551,27 @@ public class AppDataStorage {
         return 1.0 * count / getStudentAmount();
     }
     
+    public List<Sequence> sequentialApriori(final double minSupport) {
+        final Map<Sequence, Integer> sigma = new HashMap<>();
+        final Map<Integer, List<Sequence>> map = new HashMap<>();
+        
+        map.put(1, new ArrayList<Sequence>());
+        
+        
+        
+        for (final Course course : getCourseList()) {
+            
+            final int supportCount = supportCount(course);
+            final double support = 1.0 * supportCount / studentMap.size();
+            
+            if (support >= minSupport) {
+//                final Sequence sequence = new Sequence(null);
+            }
+        }
+        
+        throw new NullPointerException();
+    }
+    
     public Set<Set<Course>> apriori(final double minSupport) {
         final Map<Integer, Set<Set<Course>>> map = new HashMap<>();
         final Map<Set<Course>, Integer> sigma = new HashMap<>();

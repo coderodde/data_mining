@@ -12,8 +12,7 @@ import java.util.List;
  * @version 1.6
  */
 public class Sequence 
-implements Iterable<CourseAttendanceEntry>,  
-           Comparable<Sequence> {
+implements Iterable<Course>, Comparable<Sequence> {
         
         public static final int SEPARATE = 1;
         public static final int TOGETHER = 2;
@@ -21,34 +20,45 @@ implements Iterable<CourseAttendanceEntry>,
         /**
          * The actual sequence.
          */
-        private final List<List<CourseAttendanceEntry>> sequence;
+        private final List<List<Course>> sequence;
         
-        public Sequence(final List<List<CourseAttendanceEntry>> sequence) {
+        public Sequence(final List<List<Course>> sequence) {
             this.sequence = new ArrayList<>(sequence.size());
             
-            for (final List<CourseAttendanceEntry> element : sequence) {
+            for (final List<Course> element : sequence) {
                 this.sequence.add(new ArrayList<>(element));
             }
         }
         
+        public Sequence(final Course event) {
+            final List<List<Course>> elementList
+                    = new ArrayList<>();
+            
+            final List<Course> eventList = new ArrayList<>();
+            eventList.add(event);
+            elementList.add(eventList);
+            
+            this.sequence = elementList;
+        }
+        
         public Sequence(final Sequence s,
-                        final CourseAttendanceEntry event, 
+                        final Course event, 
                         final boolean doMerge) {
             this.sequence = new ArrayList<>(s.sequence.size() + 1);
             
-            for (final List<CourseAttendanceEntry> element : s.sequence) {
+            for (final List<Course> element : s.sequence) {
                 this.sequence.add(new ArrayList<>(element));
             }
             
             if (doMerge) {
                 final int elements = this.sequence.size();
-                final List<CourseAttendanceEntry> lastElement = 
-                        this.sequence.get(elements - 1);
+                final List<Course> lastElement 
+                        = this.sequence.get(elements - 1);
                 
                 lastElement.add(event);
-                Collections.<CourseAttendanceEntry>sort(lastElement);
+                Collections.<Course>sort(lastElement);
             } else {
-                final List<CourseAttendanceEntry> lastElement 
+                final List<Course> lastElement 
                         = new ArrayList<>(1);
                 
                 lastElement.add(event);
@@ -57,10 +67,10 @@ implements Iterable<CourseAttendanceEntry>,
         }
         
         public Sequence dropFirstEvent() {
-            final List<List<CourseAttendanceEntry>> newSequence = 
+            final List<List<Course>> newSequence = 
                     new ArrayList<>(sequence.size());
             
-            for (final List<CourseAttendanceEntry> element : sequence) {
+            for (final List<Course> element : sequence) {
                 newSequence.add(new ArrayList<>(element));
             }
             
@@ -74,14 +84,14 @@ implements Iterable<CourseAttendanceEntry>,
         }
         
         public Sequence dropLastEvent() {
-            final List<List<CourseAttendanceEntry>> newSequence = 
+            final List<List<Course>> newSequence = 
                     new ArrayList<>(sequence.size());
             
-            for (final List<CourseAttendanceEntry> element : sequence) {
+            for (final List<Course> element : sequence) {
                 newSequence.add(new ArrayList<>(element));
             }
             
-            final List<CourseAttendanceEntry> lastElement = 
+            final List<Course> lastElement = 
                     newSequence.get(newSequence.size() - 1);
             
             lastElement.remove(lastElement.size() - 1);
@@ -93,18 +103,19 @@ implements Iterable<CourseAttendanceEntry>,
             return new Sequence(newSequence);
         }
         
-        public CourseAttendanceEntry getLastEvent() {
-            final List<CourseAttendanceEntry> lastElement 
-                    = sequence.get(sequence.size() - 1);
-            
+        public Course getLastEvent() {
+            final List<Course> lastElement = sequence.get(sequence.size() - 1);
             return lastElement.get(lastElement.size() - 1);
         }
         
         public int getMergeType() {
-            final List<CourseAttendanceEntry> lastElement 
-                    = sequence.get(sequence.size() - 1);
-            
+            final List<Course> lastElement = sequence.get(sequence.size() - 1);
             return lastElement.size() > 1 ? TOGETHER : SEPARATE;
+        }
+        
+        @Override
+        public int hashCode() {
+            return sequence.hashCode();
         }
         
         @Override
@@ -114,8 +125,8 @@ implements Iterable<CourseAttendanceEntry>,
             }
             
             final Sequence other = (Sequence) o;
-            final Iterator<CourseAttendanceEntry> iter1 = iterator();
-            final Iterator<CourseAttendanceEntry> iter2 = other.iterator();
+            final Iterator<Course> iter1 = iterator();
+            final Iterator<Course> iter2 = other.iterator();
             
             while (iter1.hasNext()) {
                 if (!iter2.hasNext()) {
@@ -138,11 +149,11 @@ implements Iterable<CourseAttendanceEntry>,
             for (int i = 0; i < elementAmount; ++i) {
                 sb.append('{');
                 
-                final List<CourseAttendanceEntry> eventList = sequence.get(i);
+                final List<Course> eventList = sequence.get(i);
                 final int eventAmount = eventList.size();
                 
                 for (int j = 0; j < eventAmount; ++j) {
-                    sb.append(eventList.get(j));
+                    sb.append(eventList.get(j).toString());
                     
                     if (j < eventAmount - 1) {
                         sb.append(',');
@@ -160,22 +171,22 @@ implements Iterable<CourseAttendanceEntry>,
         }
 
         @Override
-        public Iterator<CourseAttendanceEntry> iterator() {
+        public Iterator<Course> iterator() {
             return new SequenceIterator();
         }
 
         @Override
         public int compareTo(Sequence o) {
-            final Iterator<CourseAttendanceEntry> iter1 = iterator();
-            final Iterator<CourseAttendanceEntry> iter2 = o.iterator();
+            final Iterator<Course> iter1 = iterator();
+            final Iterator<Course> iter2 = o.iterator();
             
             while (iter1.hasNext()) {
                 if (!iter2.hasNext()) {
                     return 1;
                 }
                 
-                final CourseAttendanceEntry e1 = iter1.next();
-                final CourseAttendanceEntry e2 = iter2.next();
+                final Course e1 = iter1.next();
+                final Course e2 = iter2.next();
                 
                 if (e1.equals(e2)) {
                     continue;
@@ -188,7 +199,7 @@ implements Iterable<CourseAttendanceEntry>,
         }
         
         private class SequenceIterator 
-        implements Iterator<CourseAttendanceEntry> {
+        implements Iterator<Course> {
             
             private int globalIndex;
             private int localIndex;
@@ -197,8 +208,7 @@ implements Iterable<CourseAttendanceEntry>,
             SequenceIterator() {
                 this.left = 0;
                 
-                for (final List<CourseAttendanceEntry> element : 
-                     Sequence.this.sequence) {
+                for (final List<Course> element : Sequence.this.sequence) {
                     left += element.size();
                 }
             }
@@ -209,11 +219,11 @@ implements Iterable<CourseAttendanceEntry>,
             }
 
             @Override
-            public CourseAttendanceEntry next() {
-                final List<CourseAttendanceEntry> element = 
+            public Course next() {
+                final List<Course> element = 
                         Sequence.this.sequence.get(globalIndex);
                 
-                final CourseAttendanceEntry ret = element.get(localIndex++);
+                final Course ret = element.get(localIndex++);
                 
                 if (element.size() == localIndex) {
                     localIndex = 0;
