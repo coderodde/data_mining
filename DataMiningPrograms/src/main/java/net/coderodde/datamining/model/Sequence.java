@@ -21,6 +21,8 @@ implements Iterable<Course>, Comparable<Sequence> {
      * The actual sequence.
      */
     private final List<List<Course>> sequence;
+    private int firstEventStart;
+    private int lastEventEnd;
 
     public Sequence(final List<List<Course>> sequence) {
         this.sequence = new ArrayList<>(sequence.size());
@@ -62,6 +64,16 @@ implements Iterable<Course>, Comparable<Sequence> {
             this.sequence.add(lastElement);
         }
     }
+    
+    public Sequence(final Sequence s,
+                    final Course event, 
+                    final boolean doMerge,
+                    final int firstEventStart,
+                    final int lastEventEnd) {
+        this(s, event, doMerge);
+        this.firstEventStart = firstEventStart;
+        this.lastEventEnd = lastEventEnd;
+    }
 
     public Sequence dropFirstEvent() {
         final List<List<Course>> newSequence = 
@@ -100,6 +112,26 @@ implements Iterable<Course>, Comparable<Sequence> {
         return new Sequence(newSequence);
     }
 
+    public boolean fitsInSpan(final int timeUnits) {
+        return lastEventEnd - firstEventStart <= timeUnits;
+    }
+    
+    public void setFirstEventStart(final int time) {
+        firstEventStart = time;
+    }
+    
+    public void setLastEventEnd(final int time) {
+        lastEventEnd = time;
+    }
+    
+    public int getFirstEventStart() {
+        return firstEventStart;
+    }
+    
+    public int getLastEventEnd() {
+        return lastEventEnd;
+    }
+    
     /**
      * Returns the amount of events in this sequence.
      * 

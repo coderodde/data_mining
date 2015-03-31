@@ -115,6 +115,7 @@ public class AppDataStorage {
                             new ArrayList<>();
                     entryListB.add(entry);
                     map.put(course, entryListB);
+                    Collections.sort(entryListB);
                 }
             }
         }
@@ -607,6 +608,106 @@ public class AppDataStorage {
     
     public List<SequenceAndSupport> 
         sequentialApriori(final double minSupport,
+                          final int size,
+                          final int maxspan) {
+        final Map<Sequence, Double> seqToSupportMap = new HashMap<>();
+        final Map<Sequence, Integer> sigma = new HashMap<>();
+        final Map<Integer, List<Sequence>> map = new HashMap<>();
+        
+        //// BEGIN: Work structures.
+        final List<List<Course>> workList = new ArrayList<>();
+        final List<Course> elementList = new ArrayList<>();
+        workList.add(elementList);
+        //// END: Work structures.
+        
+        final int ROWS = studentMap.size();
+        
+        map.put(1, new ArrayList<Sequence>());
+        
+        // In the first iteration, find out all frequent 1-sequences.
+        for (final Course course : courseList) {
+            final int supportCount = supportCount(course);
+            final double support = 1.0 * supportCount / ROWS;
+            
+            if (support >= minSupport) {
+                elementList.clear();
+                elementList.add(course);
+                
+                final Sequence sequence = new Sequence(workList);
+                
+                if (!sequence.fitsInSpan(maxspan)) {
+                    continue; // Ignore this sequence.
+                }
+                
+                map.get(1).add(sequence);
+                sigma.put(sequence, supportCount);
+                
+                seqToSupportMap.put(sequence, support);
+            }
+        }
+        
+        if (size <= 1) {
+            final List<SequenceAndSupport> ret = 
+                    extractSequences(map, seqToSupportMap);
+
+            Collections.sort(ret);
+
+            return ret;
+        }
+        
+        final Map<Student, Sequence> transactionMap = 
+                new HashMap<>(studentMap.size());
+        
+        for (final Student student : studentMap.keySet()) {
+            transactionMap.put(student, 
+                               getStudentCoursesAsSequenceWithTimes(student));
+        }
+        
+        int k = 1;
+        
+        do {
+            ++k;
+            
+            System.out.println("Doing k = " + k);
+            
+            final List<Sequence> candidateList = 
+                    generateSequenceCandidates(map.get(k - 1), maxspan);
+            
+            System.out.println("Candidates: " + candidateList.size());
+            
+            for (final Student student : studentMap.keySet()) {
+                final Sequence transaction = transactionMap.get(student);
+                final List<Sequence> candidateList2 = subsequence(candidateList,
+                                                                  transaction,
+                                                                  student,
+                                                                  maxspan);
+                
+                for (final Sequence sequence : candidateList2) {
+                    if (!sigma.containsKey(sequence)) {
+                        sigma.put(sequence, 1);
+                        seqToSupportMap.put(sequence, 1.0 / ROWS);
+                    } else {
+                        final int newSupportCount = sigma.get(sequence) + 1;
+                        sigma.put(sequence, newSupportCount);
+                        seqToSupportMap.put(sequence, 
+                                            1.0 * newSupportCount / ROWS);
+                    }
+                }
+            }
+            
+            map.put(k, getNextSequences(candidateList, sigma, minSupport));
+        } while (k < size && map.get(k).size() > 0);
+        
+        final List<SequenceAndSupport> ret = 
+                extractSequences(map, seqToSupportMap);
+        
+        Collections.sort(ret);
+        
+        return ret;
+    }
+    
+    public List<SequenceAndSupport> 
+        sequentialApriori(final double minSupport,
                           final int size) {
         final Map<Sequence, Double> seqToSupportMap = new HashMap<>();
         final Map<Sequence, Integer> sigma = new HashMap<>();
@@ -1034,6 +1135,38 @@ public class AppDataStorage {
         return ret;
     }
 
+    private Sequence 
+        getStudentCoursesAsSequenceWithTimes(final Student student) {
+        final List<CourseAttendanceEntry> entryList = studentMap.get(student);
+        final List<List<Course>> mainList = new ArrayList<>();
+        
+        Collections.<CourseAttendanceEntry>sort(entryList);
+        
+        int year = entryList.get(0).getYear();
+        int month = entryList.get(0).getMonth();
+        
+        List<Course> workList = new ArrayList<>();
+        workList.add(entryList.get(0).getCourse());
+        
+        for (int i = 1; i < entryList.size(); ++i) {
+            final CourseAttendanceEntry currentEntry = entryList.get(i);
+            
+            if (currentEntry.getMonth() == month 
+                    && currentEntry.getYear() == year) {
+                workList.add(currentEntry.getCourse());
+            } else {
+                mainList.add(workList);
+                workList = new ArrayList<>();
+                workList.add(currentEntry.getCourse());
+                
+                year = currentEntry.getYear();
+                month = currentEntry.getMonth();
+            }
+        }
+        
+        return new Sequence(mainList);
+    }
+
     private Sequence getStudentCoursesAsSequence(final Student student) {
         final List<CourseAttendanceEntry> entryList = studentMap.get(student);
         final List<List<Course>> mainList = new ArrayList<>();
@@ -1063,6 +1196,45 @@ public class AppDataStorage {
         }
         
         return new Sequence(mainList);
+    }
+
+    private List<Sequence> subsequence(final List<Sequence> candidateList, 
+                                       final Sequence transaction,
+                                       final Student owner,
+                                       final int maxspan) {
+        final List<Sequence> ret = new ArrayList<>(candidateList.size());
+        
+        for (final Sequence sequence : candidateList) {
+            if (sequence.isContainedIn(transaction)) {
+                loadTimestamps(sequence, owner);
+                
+                if (sequence.fitsInSpan(maxspan)) {
+                    ret.add(sequence);
+                }
+            }
+        }
+        
+        return ret;
+    }
+    
+    private void loadTimestamps(final Sequence sequence,
+                                final Student owner) {
+        int first = Integer.MAX_VALUE;
+        int last = Integer.MIN_VALUE;
+       
+        for (final Course course : sequence) {
+            final List<CourseAttendanceEntry> list = 
+                    matrix.get(owner).get(course);
+            
+            final CourseAttendanceEntry entry = list.get(list.size() - 1);
+            final int time = 12 * entry.getYear() + entry.getMonth() - 1;
+            
+            first = Math.min(first, time);
+            last = Math.max(last, time);
+        }
+        
+        sequence.setFirstEventStart(first);
+        sequence.setLastEventEnd(last);
     }
 
     private List<Sequence> subsequence(final List<Sequence> candidateList, 
@@ -1117,6 +1289,37 @@ public class AppDataStorage {
     }
     
     private List<Sequence> 
+        generateSequenceCandidates(final List<Sequence> input,
+                                   final int maxspan) {
+        final List<Sequence> outputList = new ArrayList<>();
+        final int inputSequenceAmount = input.size();
+        
+        for (int i1 = 0; i1 < inputSequenceAmount; ++i1) {
+            final Sequence s1 = input.get(i1);
+            final Sequence s1aux = s1.dropFirstEvent();
+            
+            for (int i2 = 0; i2 < inputSequenceAmount; ++i2) {
+                if (i1 == i2) {
+                    continue;
+                }
+                
+                final Sequence s2 = input.get(i2);
+                final Sequence s2aux = s2.dropLastEvent();
+                
+                if (s1aux.equals(s2aux)) {
+                    final Sequence out = mergeSequencesWithTimestamps(s1, s2);
+                    
+                    if (out.fitsInSpan(maxspan)) {
+                        outputList.add(out);
+                    } 
+                }
+            }
+        }
+        
+        return outputList;
+    }
+        
+    private List<Sequence> 
         generateSequenceCandidates(final List<Sequence> input) {
         final List<Sequence> outputList = new ArrayList<>();
         final int inputSequenceAmount = input.size();
@@ -1142,6 +1345,29 @@ public class AppDataStorage {
         return outputList;
     }
       
+    private Sequence mergeSequencesWithTimestamps(final Sequence s1, 
+                                                  final Sequence s2) {
+        final Course lastEvent = s2.getLastEvent();
+        
+        final int start = Math.min(s1.getFirstEventStart(),
+                                   s2.getFirstEventStart());
+        
+        final int end = Math.max(s1.getLastEventEnd(),
+                                 s2.getLastEventEnd());
+        
+        switch (s2.getMergeType()) {
+            case Sequence.SEPARATE:
+                return new Sequence(s1, lastEvent, false, start, end);
+                
+            case Sequence.TOGETHER:
+                return new Sequence(s1, lastEvent, true, start, end);
+                
+            default:
+                throw new IllegalStateException(
+                        "Unknown merge type: " + s2.getMergeType());
+        }
+    }
+    
     private Sequence mergeSequences(final Sequence s1, final Sequence s2) {
         final Course lastEvent = s2.getLastEvent();
         
