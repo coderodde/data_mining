@@ -393,21 +393,23 @@ public class SequenceTest {
     }
     
     public static final Sequence createSequence(final Course... courses) {
-        final List<List<Course>> list = new ArrayList<>();
+        final List<List<Course>> list = new ArrayList<>(courses.length);
         
         List<Course> currentElement = new ArrayList<>();
+        currentElement.add(courses[0]);
         
-        for (int i = 0; i < courses.length; ++i) {
-            if (courses[i] == null) {
-                if (!currentElement.isEmpty()) {
-                    list.add(currentElement);
-                    currentElement = new ArrayList<>();
-                }
+        for (int i = 1; i < courses.length; ++i) {
+            final Course current = courses[i];
+            
+            if (current == null) {
+                list.add(currentElement);
+                currentElement = new ArrayList<>();
             } else {
-                currentElement.add(courses[i]);
+                currentElement.add(current);
             }
         }
         
+        list.add(currentElement);
         return new Sequence(list);
     }
 }

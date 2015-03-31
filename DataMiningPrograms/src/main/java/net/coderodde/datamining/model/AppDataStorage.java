@@ -649,7 +649,14 @@ public class AppDataStorage {
             return ret;
         }
         
-        System.out.println("First step done!");
+        System.out.println("Hfdsf: " + map.get(1).size());
+        
+        final Map<Student, Sequence> transactionMap = 
+                new HashMap<>(studentMap.size());
+        
+        for (final Student student : studentMap.keySet()) {
+            transactionMap.put(student, getStudentCoursesAsSequence(student));
+        }
         
         int k = 1;
         
@@ -661,9 +668,10 @@ public class AppDataStorage {
             final List<Sequence> candidateList = 
                     generateSequenceCandidates(map.get(k - 1));
             
+            System.out.println("Candidates: " + candidateList.size());
+            
             for (final Student student : studentMap.keySet()) {
-                final Sequence transaction 
-                        = getStudentCoursesAsSequence(student);
+                final Sequence transaction = transactionMap.get(student);
                 final List<Sequence> candidateList2 = subsequence(candidateList,
                                                                   transaction);
                 
@@ -1014,11 +1022,11 @@ public class AppDataStorage {
                          final Map<Sequence, Integer> sigma, 
                          final double minSupport) {
         final List<Sequence> ret = new ArrayList<>(candidateList.size());
+        final int ROWS = studentMap.keySet().size();
         
         for (final Sequence sequence : candidateList) {
             if (sigma.get(sequence) != null
-                    && 1.0 * sigma.get(sequence) 
-                           / studentMap.keySet().size() >= minSupport) {
+                    && 1.0 * sigma.get(sequence) / ROWS >= minSupport) {
                 ret.add(sequence);
             }
         }
