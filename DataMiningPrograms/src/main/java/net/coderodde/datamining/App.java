@@ -3,7 +3,6 @@ package net.coderodde.datamining;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -14,6 +13,7 @@ import java.util.Set;
 import net.coderodde.datamining.loader.support.DataLoaderv1;
 import net.coderodde.datamining.model.AppDataStorage;
 import net.coderodde.datamining.model.AppDataStorage.SequenceAndSupport;
+import net.coderodde.datamining.model.AssociationRule;
 import net.coderodde.datamining.model.Course;
 import net.coderodde.datamining.model.Sequence;
 import net.coderodde.datamining.model.Student;
@@ -98,10 +98,16 @@ public class App {
 //        app.printWeek3Task17();
 //        app.printWeek3Task18();
         
-        app.printWeek3Task17();
-        app.printWeek3Task17WithMaxspan();
+//        app.printWeek3Task17();
+//        app.printWeek3Task17WithMaxspan();
         
 //        app.printWeek3Task18WithMaxspan();
+        
+          ////////////////
+         //// WEEK 4 ////
+        ////////////////
+        
+        app.printWeek4Task14();
     }
 
     private void interactiveSupportCounter() {
@@ -1192,6 +1198,31 @@ public class App {
             }
             
             System.out.println(sb.append("] ").append(support).toString());
+        }
+    }
+    
+    private void printWeek4Task14() {
+        final double minSupport = 0.1;
+        final double minConfidence = 0.01;
+        
+        final long ta = System.currentTimeMillis();
+        final List<AssociationRule> rules = appData.apriori(minSupport, 
+                                                            minConfidence);
+        final long tb = System.currentTimeMillis();
+        
+        System.out.println("Found " + rules.size() + " rules in " + 
+                           (tb - ta) + " ms.");
+        
+        final Course introProgrammingCourse = 
+                appData.getCourseByName("Ohjelmoinnin perusteet");
+        
+        System.out.println(introProgrammingCourse);
+        System.out.println("Total rules: " + rules.size());
+        
+        for (final AssociationRule rule : rules) {
+            if (rule.getConsequent().contains(introProgrammingCourse)) {
+                System.out.println(rule);
+            }
         }
     }
     

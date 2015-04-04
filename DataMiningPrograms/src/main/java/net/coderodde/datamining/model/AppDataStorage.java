@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -888,8 +889,12 @@ public class AppDataStorage {
         do {
             ++k;
             
+            System.out.println("Doing k = " + k);
+            
             final Set<Set<Course>> candidateSet = 
                     generateCandidates(map.get(k - 1));
+            
+            System.out.println("Candidates: " + candidateSet.size());
             
             for (final Student student : studentMap.keySet()) {
                 final Set<Course> transaction = getStudentsAllCourses(student);
@@ -914,63 +919,139 @@ public class AppDataStorage {
         final List<AssociationRule> associationRules = new ArrayList<>();
         final Set<Set<Course>> consequentSet = new HashSet<>();
         
+        System.out.println("Frequent itemsets: " + frequentItemsets.size());
+        
+        //// Create all possible association rules (with one-element 
+        //// consequents) out of frequent itemsets:
+        final List<AssociationRule> inputRules = 
+                extractRules1(frequentItemsets, sigma);
+        
+        //// Iterate through all frequent itemsets with at least two courses.
         for (final Set<Course> itemset : frequentItemsets) {
-            if (itemset.size() > 1) {
-                for (final Course course : itemset) {
-                    final Set<Course> oneItemset = new HashSet<>(1);
-                    oneItemset.add(course);
-                    consequentSet.add(oneItemset);
-                }
-                
-                associationRules.addAll(generateAssociationRules(itemset,
-                                                                 consequentSet,
-                                                                 sigma,
-                                                                 minConfidence));
+            if (itemset.size() < 2) {
+                continue;
             }
+            
+            associationRules.addAll(generateAssociationRules(itemset,
+                                                             inputRules,
+                                                             sigma,
+                                                             minConfidence));
         }
         
         return associationRules;
     }
     
+    public List<AssociationRule> 
+        extractRules1(final Set<Set<Course>> frequentItemsets,
+                      final Map<Set<Course>, Integer> sigma) {
+        final List<AssociationRule> ret = new ArrayList<>();
+        final Set<AssociationRule> set = new HashSet<>();
+        final Set<Course> workSet = new HashSet<>(1);
+        
+        for (final Set<Course> itemset : frequentItemsets) {
+            for (final Course course : itemset) {
+                final Set<Course> antecedent = new HashSet<>(itemset);
+                final Set<Course> consequent = new HashSet<>(1);
+                
+                antecedent.remove(course);
+                consequent.add(course);
+                
+                final int supportCount = sigma.get(itemset);
+                final double support = 1.0 * supportCount 
+                                           / studentMap.size();
+                
+                workSet.add(course);
+                
+                final double confidence = 1.0 * supportCount 
+                                              / sigma.get(workSet);
+                
+                workSet.clear();
+                
+                final AssociationRule rule = new AssociationRule(antecedent,
+                                                                 consequent,
+                                                                 support,
+                                                                 confidence);
+                
+                set.add(rule);
+                ret.add(rule);
+            }
+        }
+        
+        System.out.println("extractRules1 - ret: " + ret.size() + " set: " + 
+                           set.size());
+        return ret;
+    }
+    
+    private List<AssociationRule> 
+        generateNextRules(final List<AssociationRule> ruleList) {
+        final List<AssociationRule> ret = new ArrayList<>();
+        final Set<AssociationRule> set = new HashSet<>();
+        
+        for (final AssociationRule rule : ruleList) {
+            for (final Course antecedentElement : rule.getAntecedent()) {
+                final Set<Course> newAntecedent = 
+                        new HashSet<>(rule.getAntecedent());
+                
+                final Set<Course> newConsequent =
+                        new HashSet<>(rule.getConsequent().size() + 1);
+                
+                newAntecedent.remove(antecedentElement);
+                newConsequent.addAll(rule.getConsequent());
+                newConsequent.add(antecedentElement);
+                
+                final AssociationRule newRule = 
+                        new AssociationRule(newAntecedent,
+                                            newConsequent,
+                                            0.0,
+                                            0.0);
+                
+                ret.add(newRule);
+                set.add(newRule);
+            }
+        }
+        
+        System.out.println("generateNextRules - ret: " + ret.size() + " set: " + set.size());
+        return ret;
+    }
+    
     private List<AssociationRule> 
         generateAssociationRules(final Set<Course> itemset,
-                                 final Set<Set<Course>> consequents,
+                                 final List<AssociationRule> rules,
                                  final Map<Set<Course>, Integer> sigma,
                                  final double minConfidence) {
         final List<AssociationRule> ret = new ArrayList<>();
         final int k = itemset.size();
-        final int m = consequents.size();
+        final int m = rules.get(0).getConsequent().size();
+        final Set<Course> workSet = new HashSet<>(k);
         
         if (k > m + 1) {
-            final Set<Set<Course>> nextConsequents = 
-                    generateCandidates(consequents);
+            final List<AssociationRule> nextRules = generateNextRules(rules);
             
-            for (final Set<Course> h : nextConsequents) {
-                final Set<Course> tmpset = new HashSet<>(itemset);
-                tmpset.removeAll(h);
+            final Iterator<AssociationRule> iterator = nextRules.iterator();
+            
+            while (iterator.hasNext()) {
+                final AssociationRule rule = iterator.next();
                 
-                final int supportCount = sigma.get(itemset);
-                final double support = 1.0 * supportCount / 
-                                             studentMap.size();
+                workSet.clear();
+                workSet.addAll(itemset);
+                workSet.removeAll(rule.getConsequent());
                 
-                final double confidence = supportCount /
-                                          sigma.get(tmpset);
+                final double confidence = 1.0 * sigma.get(itemset) / 
+                                                sigma.get(workSet);
                 
                 if (confidence >= minConfidence) {
-                    ret.add(new AssociationRule(tmpset,
-                                                h, 
-                                                support, 
-                                                confidence));
+                   ret.add(rule);
                 } else {
-                    nextConsequents.remove(h);
+                    // Remove 'rule'.
+                    iterator.remove();
                 }
             }
             
-            ret.addAll(generateAssociationRules(itemset, 
-                                                nextConsequents, 
+            ret.addAll(generateAssociationRules(itemset,
+                                                nextRules,
                                                 sigma,
                                                 minConfidence));
-        }
+        } 
         
         return ret;
     }

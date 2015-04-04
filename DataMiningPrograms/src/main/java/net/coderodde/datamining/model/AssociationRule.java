@@ -9,8 +9,8 @@ public class AssociationRule {
 
     private final Set<Course> antecedent;
     private final Set<Course> consequent;
-    private final double support;
-    private final double confidence;
+    private double support;
+    private double confidence;
     
     public AssociationRule(final Set<Course> antecedent,
                            final Set<Course> consequent,
@@ -36,6 +36,14 @@ public class AssociationRule {
     
     public double getConfidence() {
         return confidence;
+    }
+    
+    public void setSupport(final double support) {
+        this.support = support;
+    }
+    
+    public void setConfidence(final double confidence) {
+        this.confidence = confidence;
     }
     
     @Override
@@ -66,5 +74,17 @@ public class AssociationRule {
                  .append(", confidence: ")
                  .append(confidence)
                  .toString();
+    }
+    
+    @Override
+    public boolean equals(final Object o) {
+        final AssociationRule other = (AssociationRule) o;
+        return antecedent.equals(other.antecedent) 
+                && consequent.equals(other.consequent);
+    }
+    
+    @Override
+    public int hashCode() {
+        return antecedent.hashCode() ^ consequent.hashCode();
     }
 }
