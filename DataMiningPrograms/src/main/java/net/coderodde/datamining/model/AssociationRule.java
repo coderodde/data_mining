@@ -61,6 +61,8 @@ public class AssociationRule {
             }
         }
         
+        sb.append("} --> {");
+        
         for (int i = 0; i < consequentList.size(); ++i) {
             sb.append(consequentList.get(i).getName());
             

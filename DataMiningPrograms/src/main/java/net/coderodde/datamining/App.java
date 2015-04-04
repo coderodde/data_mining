@@ -1202,8 +1202,10 @@ public class App {
     }
     
     private void printWeek4Task14() {
+        System.out.println("--- printWeek4Task14 ---");
+        
         final double minSupport = 0.1;
-        final double minConfidence = 0.01;
+        final double minConfidence = 0.1;
         
         final long ta = System.currentTimeMillis();
         final List<AssociationRule> rules = appData.apriori(minSupport, 

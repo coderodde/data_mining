@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuite tests="9" failures="0" name="net.coderodde.datamining.model.SequenceTest" time="0.029" errors="0" skipped="0">
+<testsuite tests="9" failures="0" name="net.coderodde.datamining.model.SequenceTest" time="0.019" errors="0" skipped="0">
   <properties>
     <property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
     <property name="sun.boot.library.path" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_40.jdk/Contents/Home/jre/lib"/>
@@ -63,13 +63,13 @@
     <property name="ftp.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="sun.cpu.isalist" value=""/>
   </properties>
-  <testcase classname="net.coderodde.datamining.model.SequenceTest" name="testEquals" time="0.003"/>
-  <testcase classname="net.coderodde.datamining.model.SequenceTest" name="testHashCode" time="0.003"/>
-  <testcase classname="net.coderodde.datamining.model.SequenceTest" name="testDropFirstEvent" time="0.002"/>
-  <testcase classname="net.coderodde.datamining.model.SequenceTest" name="testDropLastEvent" time="0.002"/>
+  <testcase classname="net.coderodde.datamining.model.SequenceTest" name="testDropFirstEvent" time="0.004"/>
+  <testcase classname="net.coderodde.datamining.model.SequenceTest" name="testDropLastEvent" time="0.003"/>
   <testcase classname="net.coderodde.datamining.model.SequenceTest" name="testGetLastEvent" time="0"/>
   <testcase classname="net.coderodde.datamining.model.SequenceTest" name="testGetMergeType" time="0"/>
-  <testcase classname="net.coderodde.datamining.model.SequenceTest" name="testIsContainedIn" time="0.003"/>
-  <testcase classname="net.coderodde.datamining.model.SequenceTest" name="testIterator" time="0"/>
-  <testcase classname="net.coderodde.datamining.model.SequenceTest" name="testCompareTo" time="0"/>
+  <testcase classname="net.coderodde.datamining.model.SequenceTest" name="testIsContainedIn" time="0.002"/>
+  <testcase classname="net.coderodde.datamining.model.SequenceTest" name="testIterator" time="0.001"/>
+  <testcase classname="net.coderodde.datamining.model.SequenceTest" name="testCompareTo" time="0.001"/>
+  <testcase classname="net.coderodde.datamining.model.SequenceTest" name="testEquals" time="0"/>
+  <testcase classname="net.coderodde.datamining.model.SequenceTest" name="testHashCode" time="0.001"/>
 </testsuite>

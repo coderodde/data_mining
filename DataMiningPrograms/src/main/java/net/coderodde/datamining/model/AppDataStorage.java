@@ -917,7 +917,6 @@ public class AppDataStorage {
         
         final Set<Set<Course>> frequentItemsets = extractItemSets(map);
         final List<AssociationRule> associationRules = new ArrayList<>();
-        final Set<Set<Course>> consequentSet = new HashSet<>();
         
         System.out.println("Frequent itemsets: " + frequentItemsets.size());
         
@@ -949,6 +948,12 @@ public class AppDataStorage {
         final Set<Course> workSet = new HashSet<>(1);
         
         for (final Set<Course> itemset : frequentItemsets) {
+            if (itemset.size() < 2) {
+                // Ignore the itemsets having less than 2 items, because they
+                // may not represent association rules.
+                continue;
+            }
+            
             for (final Course course : itemset) {
                 final Set<Course> antecedent = new HashSet<>(itemset);
                 final Set<Course> consequent = new HashSet<>(1);
@@ -988,6 +993,10 @@ public class AppDataStorage {
         final Set<AssociationRule> set = new HashSet<>();
         
         for (final AssociationRule rule : ruleList) {
+            if (rule.getAntecedent().size() < 2) {
+                continue;
+            }
+            
             for (final Course antecedentElement : rule.getAntecedent()) {
                 final Set<Course> newAntecedent = 
                         new HashSet<>(rule.getAntecedent());
@@ -1011,7 +1020,7 @@ public class AppDataStorage {
         }
         
         System.out.println("generateNextRules - ret: " + ret.size() + " set: " + set.size());
-        return ret;
+        return new ArrayList<>(set);
     }
     
     private List<AssociationRule> 
@@ -1019,14 +1028,14 @@ public class AppDataStorage {
                                  final List<AssociationRule> rules,
                                  final Map<Set<Course>, Integer> sigma,
                                  final double minConfidence) {
-        final List<AssociationRule> ret = new ArrayList<>();
+        final Set<AssociationRule> set = new HashSet<>();
+        
         final int k = itemset.size();
         final int m = rules.get(0).getConsequent().size();
         final Set<Course> workSet = new HashSet<>(k);
         
         if (k > m + 1) {
             final List<AssociationRule> nextRules = generateNextRules(rules);
-            
             final Iterator<AssociationRule> iterator = nextRules.iterator();
             
             while (iterator.hasNext()) {
@@ -1036,24 +1045,32 @@ public class AppDataStorage {
                 workSet.addAll(itemset);
                 workSet.removeAll(rule.getConsequent());
                 
-                final double confidence = 1.0 * sigma.get(itemset) / 
+                final int supportCount = sigma.get(itemset);
+                final double confidence = 1.0 * supportCount / 
                                                 sigma.get(workSet);
                 
                 if (confidence >= minConfidence) {
-                   ret.add(rule);
+                   final double support = 1.0 * supportCount 
+                                              / studentMap.size();
+                   rule.setSupport(support);
+                   rule.setConfidence(confidence);
+                   set.add(rule);
                 } else {
                     // Remove 'rule'.
                     iterator.remove();
                 }
             }
             
-            ret.addAll(generateAssociationRules(itemset,
-                                                nextRules,
-                                                sigma,
-                                                minConfidence));
+            final List<AssociationRule> rulesToAdd =
+                    generateAssociationRules(itemset,
+                                             nextRules,
+                                             sigma,
+                                             minConfidence);
+            
+            set.addAll(rulesToAdd);
         } 
         
-        return ret;
+        return new ArrayList<>(set);
     }
     
     public Set<Set<Course>> apriori(final double minSupport) {

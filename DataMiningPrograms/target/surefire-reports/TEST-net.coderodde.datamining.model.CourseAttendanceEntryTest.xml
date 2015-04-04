@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuite tests="15" failures="0" name="net.coderodde.datamining.model.CourseAttendanceEntryTest" time="0.181" errors="0" skipped="0">
+<testsuite tests="15" failures="0" name="net.coderodde.datamining.model.CourseAttendanceEntryTest" time="0.22" errors="0" skipped="0">
   <properties>
     <property name="java.runtime.name" value="Java(TM) SE Runtime Environment"/>
     <property name="sun.boot.library.path" value="/Library/Java/JavaVirtualMachines/jdk1.8.0_40.jdk/Contents/Home/jre/lib"/>
@@ -63,19 +63,19 @@
     <property name="ftp.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="sun.cpu.isalist" value=""/>
   </properties>
-  <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testGetStudent" time="0.003"/>
+  <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testGetStudent" time="0.006"/>
   <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testGetCourse" time="0"/>
   <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testGetYear" time="0"/>
-  <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testGetMonth" time="0"/>
+  <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testGetMonth" time="0.001"/>
   <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testGetGrade" time="0"/>
   <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testEquals" time="0.002"/>
-  <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testHashCode" time="0"/>
-  <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testThrowsOnNullStudent" time="0"/>
-  <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testThrowsOnNullCourse" time="0"/>
+  <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testHashCode" time="0.001"/>
+  <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testThrowsOnNullStudent" time="0.001"/>
+  <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testThrowsOnNullCourse" time="0.002"/>
   <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testThrowsOnToSmallMonth" time="0.001"/>
-  <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testThrowsOnToLargeMonth" time="0"/>
-  <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testDoesNotThrowOnValidMonths" time="0"/>
-  <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testThrowsOnTooSmallGrade" time="0"/>
+  <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testThrowsOnToLargeMonth" time="0.001"/>
+  <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testDoesNotThrowOnValidMonths" time="0.007"/>
+  <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testThrowsOnTooSmallGrade" time="0.002"/>
   <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testThrowsOnTooLargeGrade" time="0.001"/>
-  <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testDoesNotThrowOnValidGrades" time="0"/>
+  <testcase classname="net.coderodde.datamining.model.CourseAttendanceEntryTest" name="testDoesNotThrowOnValidGrades" time="0.005"/>
 </testsuite>
