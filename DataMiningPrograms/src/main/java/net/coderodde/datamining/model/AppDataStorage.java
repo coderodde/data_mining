@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import net.coderodde.datamining.App;
 import static net.coderodde.datamining.model.Course.COURSE_FAILED_GRADE;
 import static net.coderodde.datamining.utils.Utils.containsAll;
 import static net.coderodde.datamining.utils.Utils.intersect;
@@ -861,6 +860,117 @@ public class AppDataStorage {
                 extractSequences(map, seqToSupportMap);
         
         Collections.sort(ret);
+        
+        return ret;
+    }
+    
+    public List<AssociationRule> apriori(final double minSupport,
+                                         final double minConfidence) {
+        final Map<Integer, Set<Set<Course>>> map = new HashMap<>();
+        final Map<Set<Course>, Integer> sigma = new HashMap<>();
+        
+        map.put(1, new HashSet<Set<Course>>());
+        
+        for (final Course course : getCourseList()) {
+            final int supportCount = supportCount(course);
+            final double support = 1.0 * supportCount / studentMap.size();
+            
+            if (support > minSupport) {
+                final Set<Course> itemSet = new HashSet<>(1);
+                itemSet.add(course);
+                map.get(1).add(itemSet);
+                sigma.put(itemSet, supportCount);
+            }
+        }
+        
+        int k = 1;
+        
+        do {
+            ++k;
+            
+            final Set<Set<Course>> candidateSet = 
+                    generateCandidates(map.get(k - 1));
+            
+            for (final Student student : studentMap.keySet()) {
+                final Set<Course> transaction = getStudentsAllCourses(student);
+                final Set<Set<Course>> candidateSet2 = subset(candidateSet, 
+                                                              transaction);
+                
+                for (final Set<Course> itemset : candidateSet2) {
+                    if (!sigma.containsKey(itemset)) {
+                        sigma.put(itemset, 1);
+                    } else {
+                        sigma.put(itemset, sigma.get(itemset) + 1);
+                    }
+                }
+            }
+            
+            map.put(k, getNextItemsets(candidateSet, 
+                                       sigma,
+                                       (int)(minSupport * studentMap.size())));
+        } while (map.get(k).size() > 0);
+        
+        final Set<Set<Course>> frequentItemsets = extractItemSets(map);
+        final List<AssociationRule> associationRules = new ArrayList<>();
+        final Set<Set<Course>> consequentSet = new HashSet<>();
+        
+        for (final Set<Course> itemset : frequentItemsets) {
+            if (itemset.size() > 1) {
+                for (final Course course : itemset) {
+                    final Set<Course> oneItemset = new HashSet<>(1);
+                    oneItemset.add(course);
+                    consequentSet.add(oneItemset);
+                }
+                
+                associationRules.addAll(generateAssociationRules(itemset,
+                                                                 consequentSet,
+                                                                 sigma,
+                                                                 minConfidence));
+            }
+        }
+        
+        return associationRules;
+    }
+    
+    private List<AssociationRule> 
+        generateAssociationRules(final Set<Course> itemset,
+                                 final Set<Set<Course>> consequents,
+                                 final Map<Set<Course>, Integer> sigma,
+                                 final double minConfidence) {
+        final List<AssociationRule> ret = new ArrayList<>();
+        final int k = itemset.size();
+        final int m = consequents.size();
+        
+        if (k > m + 1) {
+            final Set<Set<Course>> nextConsequents = 
+                    generateCandidates(consequents);
+            
+            for (final Set<Course> h : nextConsequents) {
+                final Set<Course> tmpset = new HashSet<>(itemset);
+                tmpset.removeAll(h);
+                
+                final int supportCount = sigma.get(itemset);
+                final double support = 1.0 * supportCount / 
+                                             studentMap.size();
+                
+                final double confidence = supportCount /
+                                          sigma.get(tmpset);
+                
+                if (confidence >= minConfidence) {
+                    ret.add(new AssociationRule(tmpset,
+                                                h, 
+                                                support, 
+                                                confidence));
+                } else {
+                    nextConsequents.remove(h);
+                }
+            }
+            
+            ret.addAll(generateAssociationRules(itemset, 
+                                                nextConsequents, 
+                                                sigma,
+                                                minConfidence));
+        }
         
         return ret;
     }
