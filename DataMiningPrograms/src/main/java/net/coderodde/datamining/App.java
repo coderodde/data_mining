@@ -3,6 +3,7 @@ package net.coderodde.datamining;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -1205,7 +1206,7 @@ public class App {
         System.out.println("--- printWeek4Task14 ---");
         
         final double minSupport = 0.15;
-        final double minConfidence = 0.8;
+        final double minConfidence = 0.1;
         
         final long ta = System.currentTimeMillis();
         final List<AssociationRule> rules = appData.apriori(minSupport, 
@@ -1215,17 +1216,25 @@ public class App {
         System.out.println("Found " + rules.size() + " rules in " + 
                            (tb - ta) + " ms.");
         
+        Collections.sort(rules, new Comparator() {
+
+            @Override
+            public int compare(Object o1, Object o2) {
+                final AssociationRule rule1 = (AssociationRule) o1;
+                final AssociationRule rule2 = (AssociationRule) o2;
+                
+                return Double.compare(rule1.getConfidence(), 
+                                      rule2.getConfidence());
+            }
+        });
+        
         final Course introProgrammingCourse = 
                 appData.getCourseByName("Ohjelmoinnin perusteet");
-        
-        System.out.println(introProgrammingCourse);
         
         for (final AssociationRule rule : rules) {
             if (rule.getConsequent().contains(introProgrammingCourse)) {
                 System.out.println(rule);
             }
-            
-//            System.out.println(rule);
         }
     }
     

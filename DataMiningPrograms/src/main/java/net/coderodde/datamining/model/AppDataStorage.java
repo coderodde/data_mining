@@ -929,7 +929,7 @@ public class AppDataStorage {
         
         //// Iterate through all frequent itemsets with at least two courses.
         for (final Set<Course> itemset : frequentItemsets) {
-            System.out.println("Processing " + (index++) + " k = " + itemset.size());
+//            System.out.println("Processing " + (index++) + " k = " + itemset.size());
             
             if (itemset.size() < 2) {
                 continue;
