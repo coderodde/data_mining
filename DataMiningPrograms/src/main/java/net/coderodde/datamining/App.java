@@ -1204,8 +1204,8 @@ public class App {
     private void printWeek4Task14() {
         System.out.println("--- printWeek4Task14 ---");
         
-        final double minSupport = 0.1;
-        final double minConfidence = 0.1;
+        final double minSupport = 0.15;
+        final double minConfidence = 0.8;
         
         final long ta = System.currentTimeMillis();
         final List<AssociationRule> rules = appData.apriori(minSupport, 
@@ -1219,12 +1219,13 @@ public class App {
                 appData.getCourseByName("Ohjelmoinnin perusteet");
         
         System.out.println(introProgrammingCourse);
-        System.out.println("Total rules: " + rules.size());
         
         for (final AssociationRule rule : rules) {
             if (rule.getConsequent().contains(introProgrammingCourse)) {
                 System.out.println(rule);
             }
+            
+//            System.out.println(rule);
         }
     }
     

@@ -910,9 +910,7 @@ public class AppDataStorage {
                 }
             }
             
-            map.put(k, getNextItemsets(candidateSet, 
-                                       sigma,
-                                       (int)(minSupport * studentMap.size())));
+            map.put(k, getNextItemsets(candidateSet, sigma, minSupport));
         } while (map.get(k).size() > 0);
         
         final Set<Set<Course>> frequentItemsets = extractItemSets(map);
@@ -925,8 +923,14 @@ public class AppDataStorage {
         final List<AssociationRule> inputRules = 
                 extractRules1(frequentItemsets, sigma);
         
+        System.out.println("Initial rules: " + inputRules.size());
+        System.out.println("Initial frequent itemsets: " + frequentItemsets.size());
+        int index = 0;
+        
         //// Iterate through all frequent itemsets with at least two courses.
         for (final Set<Course> itemset : frequentItemsets) {
+            System.out.println("Processing " + (index++) + " k = " + itemset.size());
+            
             if (itemset.size() < 2) {
                 continue;
             }
@@ -1019,7 +1023,7 @@ public class AppDataStorage {
             }
         }
         
-        System.out.println("generateNextRules - ret: " + ret.size() + " set: " + set.size());
+//        System.out.println("generateNextRules - ret: " + ret.size() + " set: " + set.size());
         return new ArrayList<>(set);
     }
     
@@ -1029,13 +1033,15 @@ public class AppDataStorage {
                                  final Map<Set<Course>, Integer> sigma,
                                  final double minConfidence) {
         final Set<AssociationRule> set = new HashSet<>();
-        
         final int k = itemset.size();
         final int m = rules.get(0).getConsequent().size();
         final Set<Course> workSet = new HashSet<>(k);
         
+//        System.out.println("k = " + k + ", m = " + m);
+        
         if (k > m + 1) {
             final List<AssociationRule> nextRules = generateNextRules(rules);
+//            System.out.println("cons: " + nextRules.get(0).getConsequent().size());
             final Iterator<AssociationRule> iterator = nextRules.iterator();
             
             while (iterator.hasNext()) {
@@ -1313,13 +1319,17 @@ public class AppDataStorage {
     private Set<Set<Course>> 
         getNextItemsets(final Set<Set<Course>> candidateSet, 
                         final Map<Set<Course>, Integer> sigma,
-                        final int minSupportCount) {
+                        final double minSupport) {
         final Set<Set<Course>> ret = new HashSet<>(candidateSet.size());
         
         for (final Set<Course> itemset : candidateSet) {
-            if (sigma.get(itemset) != null 
-                    && sigma.get(itemset) >= minSupportCount) {
-                ret.add(itemset);
+            if (sigma.containsKey(itemset)) {
+                final int supportCount = sigma.get(itemset);
+                final double support = 1.0 * supportCount / studentMap.size();
+                
+                if (support >= minSupport) {
+                    ret.add(itemset);
+                }
             }
         }
         
