@@ -925,12 +925,9 @@ public class AppDataStorage {
         
         System.out.println("Initial rules: " + inputRules.size());
         System.out.println("Initial frequent itemsets: " + frequentItemsets.size());
-        int index = 0;
         
         //// Iterate through all frequent itemsets with at least two courses.
         for (final Set<Course> itemset : frequentItemsets) {
-//            System.out.println("Processing " + (index++) + " k = " + itemset.size());
-            
             if (itemset.size() < 2) {
                 continue;
             }
@@ -969,17 +966,34 @@ public class AppDataStorage {
                 final double support = 1.0 * supportCount 
                                            / studentMap.size();
                 
+                workSet.clear();
                 workSet.add(course);
                 
                 final double confidence = 1.0 * supportCount 
                                               / sigma.get(workSet);
+                workSet.clear();
+                workSet.addAll(consequent);
+                
+                final double supportCountOfConsequent = sigma.get(workSet);
                 
                 workSet.clear();
+                workSet.addAll(antecedent);
                 
+                final double supportCountOfAntecedent = sigma.get(workSet);
+                final double lift = confidence / 
+                                   (supportCountOfConsequent * 
+                                    studentMap.size());
+                final double isMeasure = 
+                        1.0 * supportCount / 
+                        Math.sqrt(supportCountOfConsequent * 
+                                  supportCountOfAntecedent);
+                                                
                 final AssociationRule rule = new AssociationRule(antecedent,
                                                                  consequent,
                                                                  support,
-                                                                 confidence);
+                                                                 confidence,
+                                                                 lift, 
+                                                                 isMeasure);
                 
                 set.add(rule);
                 ret.add(rule);
@@ -1014,16 +1028,13 @@ public class AppDataStorage {
                 
                 final AssociationRule newRule = 
                         new AssociationRule(newAntecedent,
-                                            newConsequent,
-                                            0.0,
-                                            0.0);
+                                            newConsequent);
                 
                 ret.add(newRule);
                 set.add(newRule);
             }
         }
         
-//        System.out.println("generateNextRules - ret: " + ret.size() + " set: " + set.size());
         return new ArrayList<>(set);
     }
     
@@ -1055,11 +1066,31 @@ public class AppDataStorage {
                 final double confidence = 1.0 * supportCount / 
                                                 sigma.get(workSet);
                 
+                workSet.clear();
+                workSet.addAll(rule.getConsequent());
+                
+                final int supportCountOfConsequent = sigma.get(workSet);
+                
+                workSet.clear();
+                workSet.addAll(rule.getAntecedent());
+                
+                final int supportCountOfAntecedent = sigma.get(workSet);
+                final double supportOfConsequent = 
+                        1.0 * supportCountOfConsequent / studentMap.size();
+                
+                final double lift = confidence / supportOfConsequent;
+                final double isMeasure = 
+                        1.0 * supportCount / 
+                        (Math.sqrt(supportCountOfConsequent *
+                                   supportCountOfAntecedent));
+                
                 if (confidence >= minConfidence) {
                    final double support = 1.0 * supportCount 
                                               / studentMap.size();
                    rule.setSupport(support);
                    rule.setConfidence(confidence);
+                   rule.setLift(lift);
+                   rule.setISMeasure(isMeasure);
                    set.add(rule);
                 } else {
                     // Remove 'rule'.

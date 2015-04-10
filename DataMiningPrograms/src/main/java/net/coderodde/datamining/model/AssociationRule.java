@@ -11,15 +11,26 @@ public class AssociationRule {
     private final Set<Course> consequent;
     private double support;
     private double confidence;
+    private double lift;
+    private double isMeasure;
+    
+    public AssociationRule(final Set<Course> antecedent,
+                           final Set<Course> consequent) {
+        this.antecedent = antecedent;
+        this.consequent = consequent;
+    }
     
     public AssociationRule(final Set<Course> antecedent,
                            final Set<Course> consequent,
                            final double support,
-                           final double confidence) {
+                           final double confidence,
+                           final double lift,
+                           final double isMeasure) {
         this.antecedent = antecedent;
         this.consequent = consequent;
         this.support = support;
         this.confidence = confidence;
+        this.isMeasure = isMeasure;
     }
     
     public Set<Course> getAntecedent() {
@@ -38,12 +49,28 @@ public class AssociationRule {
         return confidence;
     }
     
+    public double getLift() {
+        return lift;
+    }
+    
+    public double getISMeasure() {
+        return isMeasure;
+    }
+    
     public void setSupport(final double support) {
         this.support = support;
     }
     
     public void setConfidence(final double confidence) {
         this.confidence = confidence;
+    }
+    
+    public void setLift(final double lift) {
+        this.lift = lift;
+    }
+    
+    public void setISMeasure(final double isMeasure) {
+        this.isMeasure = isMeasure;
     }
     
     @Override
@@ -75,6 +102,10 @@ public class AssociationRule {
                  .append(support)
                  .append(", confidence: ")
                  .append(confidence)
+                 .append(", lift: ")
+                 .append(lift)
+                 .append(", IS: ")
+                 .append(isMeasure)
                  .toString();
     }
     
