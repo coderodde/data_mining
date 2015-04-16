@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -1235,6 +1236,22 @@ public class App {
             if (rule.getConsequent().contains(introProgrammingCourse)) {
                 System.out.println(rule);
             }
+        }
+    }
+    
+    private void secondGroupAssignment() {
+        final Map<Integer, List<Float>> map = appData.getCreditsToGPA();
+        final Map<Integer, Float> map2 = new HashMap<>(map.size());
+        
+        for (final Map.Entry<Integer, List<Float>> entry : map.entrySet()) {
+            map2.put(entry.getKey(), appData.average(entry.getValue()));
+        }
+        
+        final List<Integer> creditList = new ArrayList<>(map.keySet());
+        Collections.<Integer>sort(creditList);
+        
+        for (final int credits : creditList) {
+            System.out.printf("%d: %f\n", credits, map2.get(credits));
         }
     }
     

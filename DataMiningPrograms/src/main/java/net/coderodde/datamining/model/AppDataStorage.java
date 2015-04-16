@@ -1632,4 +1632,135 @@ public class AppDataStorage {
                         "Unknown merge type: " + s2.getMergeType());
         }
     }
+    
+    private Set<CourseDate> getCourseDatesOfStudent(final Student student) {
+        final List<CourseAttendanceEntry> entryList = studentMap.get(student);
+        final Set<CourseDate> ret = new HashSet<>(entryList.size());
+        
+        for (final CourseAttendanceEntry entry : entryList) {
+            ret.add(new CourseDate(entry));
+        }
+        
+        return ret;
+    }
+    
+    public Map<Integer, List<Float>> getCreditsToGPA() {
+        final Map<Integer, List<Float>> ret = new HashMap<>();
+        
+        for (final Student student : studentMap.keySet()) {
+            final List<List<CourseAttendanceEntry>> periodList = 
+                    getStudentSchedule(student);
+            
+            for (final List<CourseAttendanceEntry> period : periodList) {
+                final float gpa = computeGPA(period);
+                final int credits = countCredits(period);
+                
+                if (!ret.containsKey(credits)) {
+                    ret.put(credits, new ArrayList<Float>());
+                }
+                
+                ret.get(credits).add(gpa);
+            }
+        }
+        
+        return ret;
+    }
+    
+    public float average(final List<Float> floatList) {
+        float sum = 0f;
+        
+        for (final float f : floatList) {
+            sum += f;
+        }
+        
+        return sum / floatList.size();
+    }
+    
+    private List<List<CourseAttendanceEntry>> 
+        getStudentSchedule(final Student student) {
+        final Set<CourseDate> dateSet = getCourseDatesOfStudent(student);
+        final Map<CourseDate, List<CourseAttendanceEntry>> map =
+                new HashMap<>(dateSet.size());
+        
+        final List<List<CourseAttendanceEntry>> ret = new ArrayList<>();
+        final List<CourseAttendanceEntry> entryList = studentMap.get(student);
+        
+        for (final CourseAttendanceEntry entry : entryList) {
+            final CourseDate tmp = new CourseDate(entry);
+            
+            if (!map.containsKey(tmp)) {
+                map.put(tmp, new ArrayList<CourseAttendanceEntry>());
+            }
+            
+            map.get(tmp).add(entry);
+        }
+        
+        for (final List<CourseAttendanceEntry> list : map.values()) {
+            ret.add(list);
+        }
+        
+        return ret;
+    }
+        
+    private float computeGPA(final List<CourseAttendanceEntry> entryList) {
+        final int credits = countCredits(entryList);
+        int sum = 0;
+        
+        for (final CourseAttendanceEntry entry : entryList) {
+            if (entry.getCourse().getGradingMode() == 
+                    Course.GRADING_MODE_NORMAL_SCALE) {
+                sum += entry.getGrade() + entry.getCourse().getCredits();
+            }
+        }
+        
+        return 1.0f * sum / credits;
+    }
+        
+    private int countCredits(final List<CourseAttendanceEntry> entryList) {
+        int credits = 0;
+        
+        for (final CourseAttendanceEntry entry : entryList) {
+            if (entry.getCourse().getGradingMode() == 
+                    Course.GRADING_MODE_NORMAL_SCALE) {
+                // Ignore pass/fail courses.
+                credits += entry.getCourse().getCredits();
+            }
+        }
+        
+        return credits;
+    }
+    
+    static class CourseDate {
+        
+        private final int year;
+        private final int month;
+        
+        CourseDate(final int year, final int month) {
+            this.year = year;
+            this.month = month;
+        }
+        
+        CourseDate(final CourseAttendanceEntry entry) {
+            this(entry.getYear(), entry.getMonth());
+        }
+        
+        public int getYear() {
+            return year;
+        }
+        
+        public int getMonth() {
+            return month;
+        }
+        
+        @Override
+        public boolean equals(final Object o) {
+            final CourseDate cd = (CourseDate) o;
+            return getYear() == cd.getYear() && getMonth() == cd.getMonth();
+        }
+
+        @Override
+        public int hashCode() {
+            return 12 * getYear() + getMonth() - 1;
+        }
+    }
 }
