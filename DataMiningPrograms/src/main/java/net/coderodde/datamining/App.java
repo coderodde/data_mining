@@ -109,7 +109,12 @@ public class App {
          //// WEEK 4 ////
         ////////////////
         
-        app.printWeek4Task14();
+//        app.printWeek4Task14();
+        
+        //////////////////////////////
+       //// 2ND GROUP ASSIGNMENT ////
+      //////////////////////////////
+        app.secondGroupAssignment();
     }
 
     private void interactiveSupportCounter() {
@@ -1241,6 +1246,9 @@ public class App {
     
     private void secondGroupAssignment() {
         final Map<Integer, List<Float>> map = appData.getCreditsToGPA();
+        
+        map.remove(0);
+        
         final Map<Integer, Float> map2 = new HashMap<>(map.size());
         
         for (final Map.Entry<Integer, List<Float>> entry : map.entrySet()) {
@@ -1248,11 +1256,19 @@ public class App {
         }
         
         final List<Integer> creditList = new ArrayList<>(map.keySet());
+        final List<Float> gpaList = new ArrayList<>(creditList.size());
+        final List<Float> floatCreditList = new ArrayList<>(creditList.size());
+        
         Collections.<Integer>sort(creditList);
         
         for (final int credits : creditList) {
-            System.out.printf("%d: %f\n", credits, map2.get(credits));
+            System.out.printf("%d %f\n", credits, map2.get(credits));
+            floatCreditList.add(1.0f * credits);
+            gpaList.add(map2.get(credits));
         }
+        
+        System.out.println("Correlation factor: " + 
+                AppDataStorage.correlation(floatCreditList, gpaList));
     }
     
     private static 

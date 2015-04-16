@@ -1666,6 +1666,33 @@ public class AppDataStorage {
         return ret;
     }
     
+    private static float mean(final List<Float> x) {
+        float sum = 0.0f;
+        
+        for (final float f : x) {
+            sum += f;
+        }
+        
+        return sum / x.size();
+    }
+    
+    public static float correlation(final List<Float> x, final List<Float> y) {
+        final float meanx = mean(x);
+        final float meany = mean(y);
+        
+        float upperSum = 0.0f;
+        float lowerSum1 = 0.0f;
+        float lowerSum2 = 0.0f;
+        
+        for (int i = 0; i < x.size(); ++i) {
+            upperSum += (x.get(i) - meanx) * (y.get(i) - meany);
+            lowerSum1 += Math.pow(x.get(i) - meanx, 2.0f);
+            lowerSum2 += Math.pow(y.get(i) - meany, 2.0f);
+        }
+        
+        return (float)(upperSum / Math.sqrt(lowerSum1 * lowerSum2));
+    }
+    
     public float average(final List<Float> floatList) {
         float sum = 0f;
         
@@ -1696,10 +1723,48 @@ public class AppDataStorage {
         }
         
         for (final List<CourseAttendanceEntry> list : map.values()) {
-            ret.add(list);
+            ret.add(prune(list));
         }
         
         return ret;
+    }
+        
+    private List<CourseAttendanceEntry> 
+        prune(final List<CourseAttendanceEntry> entryList) {
+        final List<CourseAttendanceEntry> ret = 
+                new ArrayList<>(entryList.size());
+        
+        final Map<Course, List<CourseAttendanceEntry>> map = 
+                new HashMap<>(entryList.size());
+        
+        for (final CourseAttendanceEntry entry : entryList) {
+            final Course course = entry.getCourse();
+            
+            if (!map.containsKey(course)) {
+                map.put(course, new ArrayList<CourseAttendanceEntry>());
+            }
+            
+            map.get(course).add(entry);
+        }
+        
+        final EntryComparatorByGrade entryComparatorByGrade =
+                new EntryComparatorByGrade();
+        
+        for (final List<CourseAttendanceEntry> list : map.values()) {
+            Collections.sort(list, entryComparatorByGrade);
+            ret.add(list.get(0));
+        }
+        
+        return ret;
+    }
+        
+    private static class EntryComparatorByGrade 
+    implements Comparator<CourseAttendanceEntry> {
+
+        @Override
+        public int compare(CourseAttendanceEntry o1, CourseAttendanceEntry o2) {
+            return -Integer.compare(o1.getGrade(), o2.getGrade());
+        }
     }
         
     private float computeGPA(final List<CourseAttendanceEntry> entryList) {
@@ -1709,7 +1774,7 @@ public class AppDataStorage {
         for (final CourseAttendanceEntry entry : entryList) {
             if (entry.getCourse().getGradingMode() == 
                     Course.GRADING_MODE_NORMAL_SCALE) {
-                sum += entry.getGrade() + entry.getCourse().getCredits();
+                sum += entry.getGrade() * entry.getCourse().getCredits();
             }
         }
         
@@ -1717,14 +1782,19 @@ public class AppDataStorage {
     }
         
     private int countCredits(final List<CourseAttendanceEntry> entryList) {
-        int credits = 0;
+        final Set<Course> courseSet = new HashSet<>(entryList.size());
         
         for (final CourseAttendanceEntry entry : entryList) {
-            if (entry.getCourse().getGradingMode() == 
-                    Course.GRADING_MODE_NORMAL_SCALE) {
-                // Ignore pass/fail courses.
-                credits += entry.getCourse().getCredits();
+            if (entry.getCourse().getGradingMode() 
+                    == Course.GRADING_MODE_NORMAL_SCALE) {
+                courseSet.add(entry.getCourse());
             }
+        }
+        
+        int credits = 0;
+        
+        for (final Course course : courseSet) {
+            credits += course.getCredits();
         }
         
         return credits;
