@@ -1110,6 +1110,103 @@ public class AppDataStorage {
         return new ArrayList<>(set);
     }
     
+    public Set<Set<Course>> 
+        computeClosedFrequentPatterns(final double minSupport) {
+        final Map<Integer, Set<Set<Course>>> map = new HashMap<>();
+        final Map<Set<Course>, Integer> sigma = new HashMap<>();
+        
+        map.put(1, new HashSet<Set<Course>>());
+        
+        for (final Course course : getCourseList()) {
+            final int supportCount = supportCount(course);
+            final double support = 1.0 * supportCount / studentMap.size();
+            
+            if (support > minSupport) {
+                final Set<Course> itemSet = new HashSet<>(1);
+                itemSet.add(course);
+                map.get(1).add(itemSet);
+                sigma.put(itemSet, supportCount);
+            }
+        }
+        
+        int k = 1;
+        
+        do {
+            ++k;
+            
+            final Set<Set<Course>> candidateSet = 
+                    generateCandidates(map.get(k - 1));
+            
+            for (final Student student : studentMap.keySet()) {
+                final Set<Course> transaction = getStudentsAllCourses(student);
+                final Set<Set<Course>> candidateSet2 = subset(candidateSet, 
+                                                              transaction);
+                
+                for (final Set<Course> itemset : candidateSet2) {
+                    if (!sigma.containsKey(itemset)) {
+                        sigma.put(itemset, 1);
+                    } else {
+                        sigma.put(itemset, sigma.get(itemset) + 1);
+                    }
+                }
+            }
+            
+            map.put(k, getNextItemsets(candidateSet, 
+                                       sigma,
+                                       (int)(minSupport * studentMap.size())));
+        } while (map.get(k).size() > 0);
+        
+        final Set<Set<Course>> patternSet = extractItemSets(map);
+        final Set<Set<Course>> closedFrequentPatternSet = 
+                new HashSet<>(patternSet.size());
+        final Set<Course> workSet = new HashSet<>();
+        
+        outer:
+        for (final Set<Course> pattern : patternSet) {
+            workSet.clear();
+            workSet.addAll(pattern);
+            final int supportCount = sigma.get(workSet);
+            
+            for (final Course course : courseList) {
+                if (!pattern.contains(course)) {
+                    workSet.add(course);
+                    
+                    final int supersetSupportCount = sigma.get(workSet);
+                    
+                    if (supersetSupportCount == supportCount) {
+                        continue outer;
+                    }
+                    
+                    workSet.remove(course);
+                }
+            }
+            
+            closedFrequentPatternSet.add(pattern);
+        }
+        
+        return extractItemSets(map);
+    }
+        
+    public Set<Set<Course>> 
+        computeMaximalFrequentItemsets(final double minSupport) {
+        final Set<Set<Course>> frequentItemsets = apriori(minSupport);
+        final Map<Integer, List<Set<Course>>> map = new HashMap<>();
+      
+        for (final Set<Course> itemset : frequentItemsets) {
+            final int size = itemset.size();
+            
+            if (!map.containsKey(size)) {
+                map.put(size, new ArrayList<Set<Course>>());
+            }
+            
+            map.get(size).add(itemset);
+        }
+        
+        final List<Integer> list = new ArrayList<>(map.keySet());
+        Collections.sort(list);
+        return new HashSet<>(map.get(list.get(list.size() - 1)));
+    }
+        
     public Set<Set<Course>> apriori(final double minSupport) {
         final Map<Integer, Set<Set<Course>>> map = new HashMap<>();
         final Map<Set<Course>, Integer> sigma = new HashMap<>();
@@ -1644,8 +1741,20 @@ public class AppDataStorage {
         return ret;
     }
     
-    public Map<Integer, List<Float>> getCreditsToGPA() {
+    public static class Result1 {
+        public final Map<Integer, List<Float>> map1;
+        public final Map<Integer, Integer> map2;
+        
+        public Result1(final Map<Integer, List<Float>> map1,
+                       final Map<Integer, Integer> map2) {
+            this.map1 = map1;
+            this.map2 = map2;
+        }
+    }
+    
+    public Result1 getCreditsToGPA() {
         final Map<Integer, List<Float>> ret = new HashMap<>();
+        final Map<Integer, Integer> ret2 = new HashMap<>();
         
         for (final Student student : studentMap.keySet()) {
             final List<List<CourseAttendanceEntry>> periodList = 
@@ -1657,13 +1766,15 @@ public class AppDataStorage {
                 
                 if (!ret.containsKey(credits)) {
                     ret.put(credits, new ArrayList<Float>());
+                    ret2.put(credits, 1);
                 }
                 
                 ret.get(credits).add(gpa);
+                ret2.put(credits, ret2.get(credits) + 1);
             }
         }
         
-        return ret;
+        return new Result1(ret, ret2);
     }
     
     private static float mean(final List<Float> x) {
@@ -1728,7 +1839,15 @@ public class AppDataStorage {
         
         return ret;
     }
-        
+     
+    /**
+     * For each course, if there is multiple course attendance entries, the one
+     * with the greatest grade is retained.
+     * 
+     * @param  entryList the list to prune from multiple same-course 
+     *                    attendancies.
+     * @return the pruned list.
+     */
     private List<CourseAttendanceEntry> 
         prune(final List<CourseAttendanceEntry> entryList) {
         final List<CourseAttendanceEntry> ret = 

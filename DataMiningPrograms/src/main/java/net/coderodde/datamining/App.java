@@ -14,6 +14,7 @@ import java.util.Scanner;
 import java.util.Set;
 import net.coderodde.datamining.loader.support.DataLoaderv1;
 import net.coderodde.datamining.model.AppDataStorage;
+import net.coderodde.datamining.model.AppDataStorage.Result1;
 import net.coderodde.datamining.model.AppDataStorage.SequenceAndSupport;
 import net.coderodde.datamining.model.AssociationRule;
 import net.coderodde.datamining.model.Course;
@@ -1245,24 +1246,29 @@ public class App {
     }
     
     private void secondGroupAssignment() {
-        final Map<Integer, List<Float>> map = appData.getCreditsToGPA();
+        final Result1 result = appData.getCreditsToGPA();
         
-        map.remove(0);
+        result.map1.remove(0);
+        result.map2.remove(0);
         
-        final Map<Integer, Float> map2 = new HashMap<>(map.size());
+        final Map<Integer, Float> map2 = new HashMap<>(result.map1.size());
         
-        for (final Map.Entry<Integer, List<Float>> entry : map.entrySet()) {
+        for (final Map.Entry<Integer, List<Float>> entry : result.map1.entrySet()) {
             map2.put(entry.getKey(), appData.average(entry.getValue()));
         }
         
-        final List<Integer> creditList = new ArrayList<>(map.keySet());
+        final List<Integer> creditList = new ArrayList<>(result.map1.keySet());
         final List<Float> gpaList = new ArrayList<>(creditList.size());
         final List<Float> floatCreditList = new ArrayList<>(creditList.size());
         
         Collections.<Integer>sort(creditList);
         
         for (final int credits : creditList) {
-            System.out.printf("%d %f\n", credits, map2.get(credits));
+            System.out.printf("%d %d\n", 
+                              credits, 
+                              //map2.get(credits), 
+                              result.map2.get(credits));
+            
             floatCreditList.add(1.0f * credits);
             gpaList.add(map2.get(credits));
         }
