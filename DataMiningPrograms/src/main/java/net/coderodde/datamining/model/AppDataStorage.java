@@ -299,7 +299,7 @@ public class AppDataStorage {
                 matrix.get(student).get(course);
         
         if (entryList == null || entryList.isEmpty()) {
-            return localMinGrade >= Course.NON_EXISTENT_GRADE;
+            return false;
         }
         
         for (final CourseAttendanceEntry entry : entryList) {
@@ -307,7 +307,7 @@ public class AppDataStorage {
             
             if (grade >= localMinGrade && grade <= localMaxGrade) {
                 return true;
-            }
+            } 
         }
         
         return false;
@@ -1951,5 +1951,106 @@ public class AppDataStorage {
         public int hashCode() {
             return 12 * getYear() + getMonth() - 1;
         }
+    }
+    
+    public int supportCount(final Set<Course> courseSet, 
+                            final int minGrade, 
+                            final int maxGrade) {
+        int supportCount = 0;
+        
+        for (final Student student : studentMap.keySet()) {
+            final Set<Course> studentsCourseSet = 
+                    new HashSet<>(studentToCourseListMap.get(student));
+            
+            for (final Course course : courseSet) {
+                if (studentsCourseSet.contains(course)
+                        && hasGrade(student, course, minGrade, maxGrade)) {
+                    ++supportCount;
+                }
+            }
+        }
+        
+        return supportCount;
+    }
+    
+    public float week5Task16() {
+        final List<Student> targetStudents = new ArrayList<>();
+        final Course intro = getCourseByName("Ohjelmoinnin perusteet");
+        final Course adv = getCourseByName("Ohjelmoinnin jatkokurssi");
+        
+        for (final Student student : studentMap.keySet()) {
+            if (student.getRegistrationYear() > 2010) {
+                final int grade = grade(student, intro);
+                
+                if (grade >= 1 && grade <= 3
+                        && hasGrade(student, adv, 0, 5)) {
+                    targetStudents.add(student);
+                }
+            }
+        }
+        
+        int gradeSum = 0;
+        
+        for (final Student student : targetStudents) {
+            gradeSum += grade(student, adv);
+        }
+        
+        return 1.0f * gradeSum / targetStudents.size();
+    }
+    
+    public float week5Task17() {
+        final List<Student> targetStudents = new ArrayList<>();
+        final Course intro = getCourseByName("Ohjelmoinnin perusteet");
+        final Course algo = getCourseByName("Tietorakenteet ja algoritmit");
+        
+        intro.getCode();
+        algo.getCode();
+        
+        for (final Student student : studentMap.keySet()) {
+            if (student.getRegistrationYear() > 2010) {
+                final int grade = grade(student, intro);
+                
+                if (grade >= 4 && grade <= 5
+                        && hasGrade(student, algo, 0, 5)) {
+                    targetStudents.add(student);
+                }
+            }
+        }
+        
+        int gradeSum = 0;
+        
+        for (final Student student : targetStudents) {
+            gradeSum += grade(student, algo);
+        }
+        
+        return 1.0f * gradeSum / targetStudents.size();
+    }
+    
+    public float week5Task18() {
+        final List<Student> targetStudents = new ArrayList<>();
+        final Course intro = getCourseByName("Ohjelmoinnin perusteet");
+        final Course algo = getCourseByName("Tietorakenteet ja algoritmit");
+        
+        intro.getCode();
+        algo.getCode();
+        
+        for (final Student student : studentMap.keySet()) {
+            if (student.getRegistrationYear() < 2010) {
+                final int grade = grade(student, intro);
+                
+                if (grade >= 4 && grade <= 5
+                        && hasGrade(student, algo, 0, 5)) {
+                    targetStudents.add(student);
+                }
+            }
+        }
+        
+        int gradeSum = 0;
+        
+        for (final Student student : targetStudents) {
+            gradeSum += grade(student, algo);
+        }
+        
+        return 1.0f * gradeSum / targetStudents.size();
     }
 }

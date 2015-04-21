@@ -115,7 +115,15 @@ public class App {
         //////////////////////////////
        //// 2ND GROUP ASSIGNMENT ////
       //////////////////////////////
-        app.secondGroupAssignment();
+//        app.secondGroupAssignment();
+        
+          ////////////////
+         //// WEEK 5 ////
+        ////////////////
+        app.printWeek5Task11();
+        app.printWeek5Task16();
+        app.printWeek5Task17();
+        app.printWeek5Task18();
     }
 
     private void interactiveSupportCounter() {
@@ -1289,5 +1297,78 @@ public class App {
         }
         
         return ret;
+    }
+        
+    private void printWeek5Task11() {
+        final Set<Course> workSet = new HashSet<>();
+        final Course intro = appData.getCourseByName("Ohjelmoinnin perusteet");
+        final Course advan = appData.getCourseByName("Ohjelmoinnin jatkokurssi");
+        
+        System.out.println(intro);
+        System.out.println(advan);
+        
+        //// Introduction to Programming
+        workSet.add(intro);
+        // FAIL
+        System.out.println("Intro FAIL: " + appData.supportCount(workSet,
+                                                                 0, 
+                                                                 0));
+        // 1-3
+        System.out.println("Intro 1-3 : " + appData.supportCount(workSet,
+                                                                 1, 
+                                                                 3));
+        // 4-5
+        System.out.println("Intro 4-5 : " + appData.supportCount(workSet,
+                                                                 4, 
+                                                                 5));
+        //// Advanced programming
+        workSet.clear();
+        workSet.add(advan);
+        // FAIL
+        System.out.println("Advanced FAIL: " + appData.supportCount(workSet,
+                                                                 0, 
+                                                                 0));
+        // 1-3
+        System.out.println("Advanced 1-3 : " + appData.supportCount(workSet,
+                                                                 1, 
+                                                                 3));
+        // 4-5
+        System.out.println("Advanced 4-5 : " + appData.supportCount(workSet,
+                                                                 4, 
+                                                                 5));
+        
+        //// Introduction to Programming + Advanced programming
+        workSet.clear();
+        workSet.add(intro);
+        workSet.add(advan);
+        // FAIL
+        System.out.println("Intro + Adv. FAIL: " + appData.supportCount(workSet,
+                                                                 0, 
+                                                                 0));
+        // 1-3
+        System.out.println("Intro + Adv. 1-3 : " + appData.supportCount(workSet,
+                                                                 1, 
+                                                                 3));
+        // 4-5
+        System.out.println("Intro + Adv. 4-5 : " + appData.supportCount(workSet,
+                                                                 4, 
+                                                                 5));
+    }
+    
+    private void printWeek5Task16() {
+        System.out.println("Average score for Advanced programming: " + 
+                           appData.week5Task16());
+    }
+    
+    private void printWeek5Task17() {
+        System.out.println("Average score for Data structures and algorithms " +
+                           "(year > 2010): "
+                           + appData.week5Task17());
+    }
+    
+    private void printWeek5Task18() {
+        System.out.println("Average score for Data structures and algorithms " +
+                           "(year < 2010): "
+                           + appData.week5Task18());
     }
 }
