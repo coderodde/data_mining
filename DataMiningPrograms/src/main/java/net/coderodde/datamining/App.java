@@ -1,5 +1,8 @@
 package net.coderodde.datamining;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
 import net.coderodde.datamining.loader.support.DataLoaderv1;
 import net.coderodde.datamining.model.AppDataStorage;
 import net.coderodde.datamining.model.AppDataStorage.Result1;
@@ -120,10 +125,16 @@ public class App {
           ////////////////
          //// WEEK 5 ////
         ////////////////
-        app.printWeek5Task11();
-        app.printWeek5Task16();
-        app.printWeek5Task17();
-        app.printWeek5Task18();
+//        app.printWeek5Task11();
+//        app.printWeek5Task16();
+//        app.printWeek5Task17();
+//        app.printWeek5Task18();
+        
+          ////////////////
+         //// WEEK 6 ////
+        ////////////////
+        app.printCourseNames();
+        app.printWeek6VizTask();
     }
 
     private void interactiveSupportCounter() {
@@ -1370,5 +1381,114 @@ public class App {
         System.out.println("Average score for Data structures and algorithms " +
                            "(year < 2010): "
                            + appData.week5Task18());
+    }
+    
+    private void printWeek6VizTask() {
+        final List<Course> courseList = new ArrayList<>();
+        
+        courseList.add(appData.getCourseByName("C-ohjelmointi"));
+        courseList.add(appData.getCourseByName("Tietorakenteet ja algoritmit"));
+        courseList.add(appData.getCourseByName("Ohjelmoinnin perusteet"));
+        courseList.add(appData.getCourseByName("Ohjelmoinnin jatkokurssi"));
+        
+        Collections.sort(courseList, new Comparator<Course>() {
+            @Override
+            public int compare(Course o1, Course o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
+        
+//        System.out.println("Courses are:");
+//        for (final Course course : courseList) {
+//            System.out.println(course);
+//        }
+        
+        final Set<Course> courseSet = new HashSet<>(courseList);
+        final Set<Student>[] courseStudentSets = new Set[courseSet.size()];
+        
+        int index = 0;
+        
+        for (final Course course : courseSet) {
+            courseStudentSets[index++] = 
+                    new HashSet<>(appData.
+                                  getStudentsByCourseName(course.getName()));
+        }
+        
+        final Set<Student> targetSet = appData.intersection(courseStudentSets);
+        
+        System.out.println("Total students: " + appData.getStudentAmount());
+        System.out.println("Intersection: " + targetSet.size());
+        
+        final JFrame frame = new JFrame();
+        final MyPanel panel = new MyPanel(appData, 
+                                          courseList, 
+                                          new ArrayList<>(targetSet),
+                                          4);
+        
+//        final Dimension dim = new Dimension(100 + 4 * targetSet.size(), 4 * courseList.size());
+//        
+//        panel.setMinimumSize(dim);
+//        panel.setPreferredSize(dim);
+//        panel.setMaximumSize(dim);
+        frame.add(panel);
+        frame.pack();
+        frame.setResizable(false);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setVisible(true);
+        
+//        for (final Course course : courseList) {
+//            System.out.println(course);
+//        }
+    }
+    
+    static class MyPanel extends JPanel {
+        private final AppDataStorage appData;
+        private final List<Course> courseList;
+        private final List<Student> studentList;
+        private final int cellLength;
+        
+        MyPanel(final AppDataStorage appData,
+                final List<Course> courseList,
+                final List<Student> studentList,
+                final int cellLength) {
+            this.appData = appData;
+            this.courseList = courseList;
+            this.studentList = studentList;
+            this.cellLength = cellLength;
+            
+            final Dimension dim = 
+                    new Dimension(100 + cellLength * studentList.size(),
+                                  50 + 8*cellLength * courseList.size());
+            
+            setMinimumSize(dim);
+            setPreferredSize(dim);
+            setMaximumSize(dim);
+        }
+        
+        private Color getColor(int grade) {
+            final int factor = 255 - 255 * grade / 5;
+            return new Color(factor, factor, 255);
+        }
+        
+        @Override
+        public void update(final Graphics g) {
+            for (int column = 0; column < studentList.size(); ++column) {
+                final Student student = studentList.get(column);
+                
+                for (int row = 0; row < courseList.size(); ++row) {
+                    final Course course = courseList.get(row); 
+                    g.setColor(getColor(appData.grade(student, course)));
+                    g.fillRect(100 + cellLength * column,
+                               8*cellLength * row, 
+                               cellLength, 
+                               8*cellLength);
+                }
+            }
+        }
+        
+        @Override
+        public void paint(final Graphics g) {
+            update(g);
+        }
     }
 }

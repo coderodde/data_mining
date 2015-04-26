@@ -1,6 +1,7 @@
 package net.coderodde.datamining.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -573,6 +574,32 @@ public class AppDataStorage {
         }
         
         return 1.0 * count / getStudentAmount();
+    }
+
+    public Set<Student> intersection(final Set<Student>[] courseStudentSets) {
+        Arrays.sort(courseStudentSets, new Comparator<Set<Student>>() {
+            @Override
+            public int compare(Set<Student> o1, Set<Student> o2) {
+                return Integer.compare(o1.size(), o2.size());
+            }
+        });
+        
+        final Set<Student> ret = new HashSet<>(courseStudentSets[0]);
+        final Iterator<Student> iterator = ret.iterator();
+        
+        outer:
+        while (iterator.hasNext()) {
+            final Student student = iterator.next();
+            
+            for (int i = 1; i < courseStudentSets.length; ++i) {
+                if (!courseStudentSets[i].contains(student)) {
+                    iterator.remove();
+                    continue outer;
+                }
+            }
+        }
+        
+        return ret;
     }
     
     public static class SequenceAndSupport 
